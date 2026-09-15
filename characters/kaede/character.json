@@ -4,9 +4,19 @@
   "color": "#2f6feb",
   "position": "left",
   "appearance": {
-    "kind": "placeholder",
-    "hue": 212,
-    "hair": "long"
+    "kind": "sprite",
+    "size": {
+      "width": 1086,
+      "height": 1448
+    },
+    "expressions": {
+      "normal": "expressions/normal.png",
+      "explain": "expressions/normal.png",
+      "happy": "expressions/happy.png",
+      "surprised": "expressions/normal.png",
+      "thinking": "expressions/normal.png",
+      "trouble": "expressions/normal.png"
+    }
   },
   "voice": {
     "id": "kaede",

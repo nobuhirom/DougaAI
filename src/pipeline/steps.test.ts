@@ -75,11 +75,10 @@ describe('工程の定義', () => {
     }
   });
 
-  it('12工程すべてが定義されている', () => {
-    expect(STEPS).toHaveLength(12);
+  it('工程の並びが参考構成に沿っている（レビューは各工程のゲート、多言語化は不要）', () => {
     expect(STEPS.map((s) => s.id)).toEqual([
-      'idea', 'plan', 'research', 'script', 'review', 'visual',
-      'audio', 'thumbnail', 'assemble', 'shorts', 'i18n', 'publish',
+      'idea', 'plan', 'research', 'script', 'visual',
+      'audio', 'thumbnail', 'assemble', 'shorts', 'publish',
     ]);
   });
 

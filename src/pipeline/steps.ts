@@ -24,6 +24,11 @@ import {
  * まだ作っていない工程も定義に含め、`implemented: false` で示す。
  * 全体の流れを見せる以上、ないものを隠さない。
  *
+ * レビューは独立した工程にしない。参考にした構成では「成果物 → 確認エージェントが
+ * AI レビュー → 人間レビューを適宜」が**各工程の後ろに付くゲート**になっている。
+ * これはフェーズ3で各工程の `review` として実装する（docs/06_全体計画.md）。
+ * 多言語化は不要と決めたので定義に含めない。
+ *
  * ここが持つのは成果物の場所・検証・次に何をすべきかの提示だけで、
  * 生成そのものはエージェントか人間が行う。パイプラインは LLM を呼ばない。
  */
@@ -251,12 +256,7 @@ export const STEPS: Step[] = [
     requires: ['plan', 'research'], prompt: '04_script.md', validate: validateScriptArtifact, editable: true,
   },
   {
-    id: 'review', label: 'レビュー', phase: 'script', executor: 'agent', implemented: false, plannedPhase: 3,
-    artifact: 'logs/ai-review-logs.jsonl', resolve: () => path.join(DIRS.logs, 'ai-review-logs.jsonl'),
-    requires: ['script'], validate: notImplemented('レビュー'), editable: false,
-  },
-  {
-    id: 'visual', label: 'ビジュアル', phase: 'script', executor: 'agent', implemented: false, plannedPhase: 3,
+    id: 'visual', label: 'ビジュアル', phase: 'script', executor: 'agent', implemented: false, plannedPhase: 5,
     artifact: 'projects/<id>/script.json（visual）', resolve: scriptPath,
     requires: ['script'], validate: notImplemented('ビジュアルの自動選択'), editable: false,
   },
@@ -283,11 +283,6 @@ export const STEPS: Step[] = [
     id: 'shorts', label: 'ショート', phase: 'expand', executor: 'agent', implemented: false, plannedPhase: 6,
     artifact: 'projects/<id>/shorts.json', resolve: inProject('shorts.json'),
     requires: ['script'], validate: notImplemented('ショート'), editable: false,
-  },
-  {
-    id: 'i18n', label: '多言語化', phase: 'expand', executor: 'agent', implemented: false, plannedPhase: 6,
-    artifact: 'projects/<id>/i18n/', resolve: inProject('i18n'),
-    requires: ['script'], validate: notImplemented('多言語化'), editable: false,
   },
   {
     id: 'publish', label: '投稿', phase: 'publish', executor: 'human', implemented: false, plannedPhase: 6,
