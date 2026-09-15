@@ -62,7 +62,7 @@ npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 
 主なオプション: `--tts irodori|macos-say` / `--force` / `--preset draft|final` / `--concurrency <n>`
 
-公開用の音声には Irodori TTS のサーバーが要る（[docs/05_TTS導入.md](docs/05_TTS導入.md)）。
+公開用の音声には Irodori TTS のサーバーが要る（`./tools/irodori/start.sh`、手順は [docs/05_TTS導入.md](docs/05_TTS導入.md)）。
 まだ用意していない場合は `--tts macos-say` で下書きを作れる。これは公開用の音声ではない。
 
 ## 台本の書き方
@@ -90,11 +90,13 @@ npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 }
 ```
 
+- `meta.format` は `dialogue`（掛け合い・立ち絵あり）か `kamishibai`（紙芝居・スライド主役・立ち絵なし）。台本の構造は同じ
 - `visual` と `bgm` は省略すると**直前のセリフの状態を引き継ぐ**。消すときは `{"type":"none"}`
 - ビジュアルは6型: `none` / `title` / `bullets` / `code` / `compare` / `image`
 - 読み間違える語は `reading` で TTS 用の読みだけ上書きできる（字幕は `text` のまま）
 
-キャラクターは `characters/<id>/character.json` で定義する。
+声は [voices/library.json](voices/library.json) に登録し（キャラ声・アナウンサー風など）、
+キャラクターは `characters/<id>/character.json` の `voice.id` で参照する。
 立ち絵は画像がなくても動く（`appearance.kind: "placeholder"` が SVG で描く）。
 実素材ができたら `sprite` に切り替える。
 
