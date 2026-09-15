@@ -107,8 +107,17 @@ export const COLORS = {
   codeHighlight: 'rgba(47, 111, 235, 0.28)',
 } as const;
 
-/** BGM の音量。セリフが聞き取れる範囲に抑える。 */
-export const BGM_VOLUME = 0.12;
+/**
+ * BGM の音量。
+ *
+ * この値が意味を持つのは、BGM 音源が基準レベルに正規化されている前提のとき。
+ * 音源のレベルがバラバラだと、同じ係数でも曲によって聞こえたり聞こえなかったり
+ * する。assets/bgm/README.md に「平均 -20dBFS 程度に揃える」と決めてある。
+ *
+ * 0.09 は -20.9dB。基準どおりの音源なら混合後の BGM は平均 -40dB 前後になり、
+ * セリフ（平均 -25dB 前後）との差が 15dB 程度に収まる。
+ */
+export const BGM_VOLUME = 0.09;
 
 /** セリフ音声の音量。 */
 export const VOICE_VOLUME = 1;
