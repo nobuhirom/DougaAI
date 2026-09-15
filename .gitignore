@@ -1,0 +1,22 @@
+# OMC 運用状態
+.omc/
+
+# 依存関係
+node_modules/
+
+# 環境変数・秘密情報
+.env
+.env.*
+!.env.example
+
+# ビルド・生成物
+dist/
+build/
+out/
+renders/
+*.mp4
+*.wav
+*.mp3
+
+# OS
+.DS_Store
