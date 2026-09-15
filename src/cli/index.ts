@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { build, readManifest } from '../pipeline/build.js';
+import { buildShorts } from '../pipeline/shorts.js';
 import { doctor } from '../pipeline/doctor.js';
 import { addIdea, dropIdea, pickIdea, readInbox } from '../pipeline/ideas.js';
 import {
@@ -56,6 +57,7 @@ const USAGE = `使い方:
   validate <id>   台本を検証する（音声は生成しない）
   build    <id>   音声を生成してマニフェストを組む
   render   <id>   ビルドしてから MP4 を書き出す
+  shorts   <id>   shorts.json から縦 9:16 のショートを焼く（out/<id>-<shortId>.mp4）
   preview  <id>   Remotion Studio を開く
   info     <id>   ビルド済みマニフェストの要約を表示する
   doctor          実行環境が揃っているか確認する
@@ -212,6 +214,24 @@ async function cmdRender(
   process.stdout.write(`\nレンダリング開始（preset: ${preset}）\n`);
   await runRemotion(args);
   process.stdout.write(`\n書き出し完了: out/${projectId}.mp4\n`);
+}
+
+async function cmdShorts(projectId: string, preset: string, concurrency: string | undefined): Promise<void> {
+  if (!readManifest(projectId)) {
+    fail(`本編のマニフェストがない。先に実行する:\n  npm run douga -- build ${projectId}`);
+  }
+  const built = buildShorts(projectId);
+  process.stdout.write(`${built.length} 本のショートを組んだ\n`);
+  fs.mkdirSync(DIRS.out, { recursive: true });
+  for (const { id, manifest } of built) {
+    const output = path.join(DIRS.out, `${projectId}-${id}.mp4`);
+    const args = ['render', 'src/remotion/index.ts', 'Short', output, '--props', JSON.stringify({ projectId, shortId: id })];
+    if (preset === 'draft') args.push('--scale', '0.5', '--jpeg-quality', '70', '--image-format', 'jpeg');
+    if (concurrency) args.push('--concurrency', concurrency);
+    process.stdout.write(`\n[${id}] ${manifest.short?.title ?? ''} — ${formatDuration(manifest.totalDurationInFrames, manifest.meta.fps)}\n`);
+    await runRemotion(args);
+    process.stdout.write(`書き出し: out/${projectId}-${id}.mp4\n`);
+  }
 }
 
 async function cmdPreview(projectId: string): Promise<void> {
@@ -537,6 +557,9 @@ async function main(): Promise<void> {
       return;
     case 'preview':
       await cmdPreview(requireProjectId(projectArg));
+      return;
+    case 'shorts':
+      await cmdShorts(requireProjectId(projectArg), values.preset, values.concurrency);
       return;
     case 'info':
       cmdInfo(requireProjectId(projectArg));

@@ -35,6 +35,8 @@ export interface CharacterViewProps {
   /** 口の開き 0〜1。話していないときは 0。 */
   mouth: number;
   speaking: boolean;
+  /** 縦動画など、既定の立ち位置と違う場所に置くとき。 */
+  box?: { centerX: number; bottom: number; height: number; stageHeight: number };
 }
 
 function Figure({ character, emotion, mouth, blink }: {
@@ -91,25 +93,28 @@ export function CharacterView({
   emotion,
   mouth,
   speaking,
+  box,
 }: CharacterViewProps) {
   const frame = useCurrentFrame();
   const blink = blinkAmount(frame, phaseOf(character.id));
 
-  const side = character.position === 'left' ? CHARACTER.left : CHARACTER.right;
+  const side = box ?? (character.position === 'left' ? CHARACTER.left : CHARACTER.right);
   const aspect =
     character.appearance.kind === 'placeholder'
       ? PLACEHOLDER_VIEWBOX.width / PLACEHOLDER_VIEWBOX.height
       : character.appearance.size.width / character.appearance.size.height;
 
-  const height = CHARACTER.height;
+  const height = box?.height ?? CHARACTER.height;
   const width = height * aspect;
+  const stageHeight = box?.stageHeight ?? STAGE.height;
+  const bottom = box?.bottom ?? CHARACTER.bottom;
 
   return (
     <div
       style={{
         position: 'absolute',
         left: side.centerX - width / 2,
-        top: STAGE.height - CHARACTER.bottom - height,
+        top: stageHeight - bottom - height,
         width,
         height,
         opacity: speaking ? 1 : CHARACTER.idle.opacity,

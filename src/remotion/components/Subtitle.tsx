@@ -1,6 +1,6 @@
 import type { Character } from '../../schema/character.js';
 import { FONT_FAMILY } from '../Fonts.js';
-import { NAMEPLATE, SUBTITLE } from '../theme.js';
+import { NAMEPLATE, SUBTITLE as DEFAULT_SUBTITLE } from '../theme.js';
 import { useTheme, withAlpha } from '../ThemeContext.js';
 
 /**
@@ -11,15 +11,23 @@ import { useTheme, withAlpha } from '../ThemeContext.js';
  * 改行を任せると、検証した結果と実際の表示がずれる。
  */
 
+export type SubtitleGeometry = {
+  x: number; y: number; width: number; height: number; radius: number;
+  fontSize: number; lineHeight: number; paddingX: number; paddingY: number;
+};
+
 export interface SubtitleProps {
   lines: string[];
   character: Character;
   /** 紙芝居ではナレーターの名札を出さない。 */
   showName?: boolean;
+  /** 縦動画など、既定（SUBTITLE）と違う寸法で描くとき。 */
+  geometry?: SubtitleGeometry;
 }
 
-export function Subtitle({ lines, character, showName = true }: SubtitleProps) {
+export function Subtitle({ lines, character, showName = true, geometry }: SubtitleProps) {
   const { colors, subtitleOpacity } = useTheme();
+  const SUBTITLE = geometry ?? DEFAULT_SUBTITLE;
   return (
     <>
       {showName ? <div

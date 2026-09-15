@@ -312,7 +312,15 @@ function renderDetail(p, s) {
       <input type="text" id="modNote" placeholder="何を直したか（任意・改善ループの材料になります）" style="flex:1;min-width:240px">
       <button id="saveBtn">保存して検証</button>
     </div><div id="saveMsg" class="small muted" style="margin-top:6px"></div>`;
+  if (s.id === 'shorts') {
+    let ids = [];
+    try { ids = (JSON.parse(content).shorts || []).map((x) => x.id); } catch {}
+    html += `<div class="row" style="margin-top:14px"><label style="margin:0">画質</label><select id="preset"><option value="final">final</option><option value="draft">draft</option></select>
+      <button id="runBtn" ${p.running ? 'disabled' : ''}>ショートを焼く（縦 9:16）</button></div><div id="jobArea"></div>
+      ${ids.map((sid) => `<div class="small muted" style="margin-top:12px">${esc(sid)}</div><video controls preload="metadata" style="max-width:360px" src="/media/out/${encodeURIComponent(p.id)}-${encodeURIComponent(sid)}.mp4?t=${Date.now()}"></video>`).join('')}`;
+  }
   d.innerHTML = html;
+  if (s.id === 'shorts') bindMachine(p, s);
   $('saveBtn').addEventListener('click', async () => {
     $('saveBtn').disabled = true;
     try {
@@ -339,7 +347,7 @@ function machineForm(p, s) {
 }
 
 function bindMachine(p, s) {
-  const kind = s.id === 'audio' ? 'build' : 'render';
+  const kind = s.id === 'audio' ? 'build' : s.id === 'shorts' ? 'shorts' : 'render';
   const area = $('jobArea');
   const showJob = (job) => {
     area.innerHTML = `<div class="small" style="margin-top:10px">${job.status === 'running' ? '<span style="color:var(--accent)">実行中…</span>' : job.status === 'done' ? '<span style="color:var(--ok)">完了</span>' : '<span style="color:var(--ng)">失敗（終了コード ' + job.exitCode + '）</span>'} <span class="muted mono">${esc(job.args.slice(2).join(' '))}</span></div>
@@ -360,7 +368,7 @@ function bindMachine(p, s) {
   $('runBtn').addEventListener('click', async () => {
     $('runBtn').disabled = true;
     try {
-      const job = await api(`/api/projects/${encodeURIComponent(p.id)}/jobs`, { method: 'POST', body: JSON.stringify({ kind, tts: $('tts').value, preset: $('preset')?.value || 'final' }) });
+      const job = await api(`/api/projects/${encodeURIComponent(p.id)}/jobs`, { method: 'POST', body: JSON.stringify({ kind, tts: $('tts')?.value || 'irodori', preset: $('preset')?.value || 'final' }) });
       showJob(job); poll(job.id);
     } catch (e) { area.innerHTML = `<div class="error">${esc(e.message)}</div>`; $('runBtn').disabled = false; }
   });

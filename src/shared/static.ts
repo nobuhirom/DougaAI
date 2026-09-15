@@ -14,4 +14,5 @@ export const STATIC = {
     `characters/${characterId}/${file}`,
   projectAsset: (projectId: string, file: string) => `projects/${projectId}/${file}`,
   manifest: (projectId: string) => `manifests/${projectId}.json`,
+  shortManifest: (projectId: string, shortId: string) => `manifests/${projectId}.short.${shortId}.json`,
 } as const;

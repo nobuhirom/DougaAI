@@ -421,11 +421,15 @@ export interface VisualViewProps {
   visual: Visual;
   projectId: string;
   format: Format;
+  /** 縦動画など、形式の既定と違う寸法でパネルを描くとき。 */
+  panel?: PanelGeometry;
 }
 
-export function VisualView({ visual, projectId, format }: VisualViewProps) {
+export type { PanelGeometry };
+
+export function VisualView({ visual, projectId, format, panel }: VisualViewProps) {
   return (
-    <PanelContext.Provider value={panelFor(format)}>
+    <PanelContext.Provider value={panel ?? panelFor(format)}>
       <VisualBody visual={visual} projectId={projectId} />
     </PanelContext.Provider>
   );

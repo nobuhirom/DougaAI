@@ -1,0 +1,25 @@
+{
+  "shorts": [
+    {
+      "id": "why-json",
+      "title": "台本はJSON一枚",
+      "hook": "編集ソフトを使わない理由",
+      "lineIds": [
+        "s0_intro_002",
+        "s0_intro_003",
+        "s0_intro_004"
+      ]
+    },
+    {
+      "id": "fail-loud",
+      "title": "壊れ方で選んだ",
+      "hook": "黙って完走するのが一番まずい",
+      "lineIds": [
+        "s1_main_007",
+        "s1_main_008",
+        "s1_main_009",
+        "s1_main_010"
+      ]
+    }
+  ]
+}

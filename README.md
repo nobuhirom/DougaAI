@@ -56,6 +56,7 @@ npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 | `douga validate <id>` | 台本を検証する（音声は作らない） |
 | `douga build <id>` | 音声を生成してマニフェストを組む |
 | `douga render <id>` | ビルドして `out/<id>.mp4` を書き出す |
+| `douga shorts <id>` | `shorts.json` から縦 9:16 のショートを `out/<id>-<shortId>.mp4` に書き出す |
 | `douga preview <id>` | Remotion Studio を開く（**プレビュー専用**。下記の注意） |
 | `douga info <id>` | ビルド済みマニフェストの要約を出す |
 | `douga doctor` | 実行環境を確認する |

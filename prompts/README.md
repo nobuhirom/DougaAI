@@ -14,6 +14,7 @@ AI 工程でエージェントが従う手順（docs/06_全体計画.md 1章）�
 | [02_plan.md](02_plan.md) | 企画メモ | `idea.json` | `plan.md` |
 | [03_research.md](03_research.md) | 調査 | `plan.md` | `research.md` |
 | [04_script.md](04_script.md) | 台本 | `plan.md` `research.md` | `script.json` |
+| [09_shorts.md](09_shorts.md) | ショート | `script.json`（＋本編の尺） | `shorts.json` |
 
 手順書を直したら、その理由を `logs/modifications.jsonl` に残す。
 同じ修正を人間が二度やらないための仕組み（docs/06_全体計画.md 5章）。

@@ -10,7 +10,7 @@ import {
   appendModification,
   readModifications,
 } from '../pipeline/logs.js';
-import { DIRS, ROOT, outPath, characterConfigPath, characterDir } from '../pipeline/paths.js';
+import { DIRS, ROOT, characterConfigPath, characterDir } from '../pipeline/paths.js';
 import {
   PHASES,
   STEPS,
@@ -138,7 +138,7 @@ function readArtifactText(projectId: string, stepId: string): string | null {
 
 // --- ジョブ（音声生成・レンダリング）--------------------------------------------
 
-type JobKind = 'build' | 'render';
+type JobKind = 'build' | 'render' | 'shorts';
 type JobStatus = 'running' | 'done' | 'failed';
 
 interface Job {
@@ -176,8 +176,9 @@ function startJob(projectId: string, kind: JobKind, options: { tts: string; pres
     throw new HttpError(400, `未知のプリセット: ${options.preset}`);
   }
 
-  const args = ['tsx', 'src/cli/index.ts', kind, projectId, '--tts', options.tts];
-  if (kind === 'render') args.push('--preset', options.preset);
+  const args = ['tsx', 'src/cli/index.ts', kind, projectId];
+  if (kind !== 'shorts') args.push('--tts', options.tts);
+  if (kind !== 'build') args.push('--preset', options.preset);
 
   const id = `j${Date.now().toString(36)}${(++jobSeq).toString(36)}`;
   const job: Job = {
@@ -342,8 +343,8 @@ async function route(req: http.IncomingMessage, url: URL): Promise<Json> {
     }
     if (method === 'POST') {
       const body = (await readBody(req)) as { kind?: unknown; tts?: unknown; preset?: unknown };
-      const kind = body.kind === 'render' ? 'render' : body.kind === 'build' ? 'build' : null;
-      if (!kind) throw new HttpError(400, 'kind は build か render');
+      const kind = body.kind === 'render' ? 'render' : body.kind === 'build' ? 'build' : body.kind === 'shorts' ? 'shorts' : null;
+      if (!kind) throw new HttpError(400, 'kind は build / render / shorts');
       return ok(jobView(startJob(id, kind, {
         tts: typeof body.tts === 'string' ? body.tts : 'irodori',
         preset: typeof body.preset === 'string' ? body.preset : 'final',
@@ -396,7 +397,7 @@ export function createServer(): http.Server {
 
     const media = /^\/media\/out\/([a-z0-9][a-z0-9-]*)\.mp4$/.exec(url.pathname);
     if (req.method === 'GET' && media) {
-      serveVideo(req, res, outPath(media[1]!));
+      serveVideo(req, res, path.join(DIRS.out, `${media[1]!}.mp4`));
       return;
     }
 

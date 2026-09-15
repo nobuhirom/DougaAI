@@ -5,6 +5,7 @@ import { manifestSchema } from '../schema/manifest.js';
 import { scriptSchema } from '../schema/script.js';
 import type { Issue } from './validate.js';
 import { loadCharacter, validateScript } from './validate.js';
+import { validateShorts } from './shorts.js';
 import {
   DIRS,
   characterConfigPath,
@@ -280,9 +281,11 @@ export const STEPS: Step[] = [
     validate: validateVideoArtifact, editable: false,
   },
   {
-    id: 'shorts', label: 'ショート', phase: 'expand', executor: 'agent', implemented: false, plannedPhase: 6,
+    id: 'shorts', label: 'ショート', phase: 'expand', executor: 'agent', implemented: true,
     artifact: 'projects/<id>/shorts.json', resolve: inProject('shorts.json'),
-    requires: ['script'], validate: notImplemented('ショート'), editable: false,
+    requires: ['audio'], prompt: '09_shorts.md',
+    staleAgainst: (id) => [manifestPath(id)],
+    validate: validateShorts, editable: true,
   },
   {
     id: 'publish', label: '投稿', phase: 'publish', executor: 'human', implemented: false, plannedPhase: 6,

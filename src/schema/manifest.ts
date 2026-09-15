@@ -72,5 +72,20 @@ export const manifestSchema = z.object({
   }),
   totalDurationInFrames: z.number().int().positive(),
   lines: z.array(manifestLineSchema).min(1),
+  /**
+   * ショートとして切り出した派生マニフェストのとき。本編なら無い。
+   * width/height は meta 側を 1080×1920 に書き換えてある。
+   */
+  short: z
+    .object({
+      id: z.string(),
+      title: z.string(),
+      hook: z.string(),
+      /** フックを表示するフレーム数。 */
+      hookFrames: z.number().int().positive(),
+      /** 元の本編プロジェクト。 */
+      sourceProjectId: z.string(),
+    })
+    .optional(),
 });
 export type Manifest = z.infer<typeof manifestSchema>;
