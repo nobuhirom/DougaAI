@@ -56,7 +56,7 @@ npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 | `douga validate <id>` | 台本を検証する（音声は作らない） |
 | `douga build <id>` | 音声を生成してマニフェストを組む |
 | `douga render <id>` | ビルドして `out/<id>.mp4` を書き出す |
-| `douga preview <id>` | Remotion Studio を開く |
+| `douga preview <id>` | Remotion Studio を開く（**プレビュー専用**。下記の注意） |
 | `douga info <id>` | ビルド済みマニフェストの要約を出す |
 | `douga doctor` | 実行環境を確認する |
 
@@ -97,6 +97,16 @@ npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 キャラクターは `characters/<id>/character.json` で定義する。
 立ち絵は画像がなくても動く（`appearance.kind: "placeholder"` が SVG で描く）。
 実素材ができたら `sprite` に切り替える。
+
+### Remotion Studio の注意
+
+Studio は**プレビュー専用**として使う。プレビュー上で要素をドラッグすると
+`@remotion/studio-codemods` が `src/remotion/*.tsx` を直接書き換える。
+これを止める設定は Remotion 側にない。
+
+レイアウトを変えるときは [src/remotion/theme.ts](src/remotion/theme.ts) を編集する。
+画面の寸法と配色はそこに集約してある。詳細は
+[docs/03_方式決定.md](docs/03_方式決定.md#studio-の書き戻しで実際に起きたこと)。
 
 ## AI 工程の動かし方
 
