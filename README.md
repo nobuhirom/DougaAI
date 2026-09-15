@@ -90,7 +90,8 @@ npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 }
 ```
 
-- `meta.format` は `dialogue`（掛け合い・立ち絵あり）か `kamishibai`（紙芝居・スライド主役・立ち絵なし）。台本の構造は同じ
+- `meta.theme` でテーマ（[themes/](themes/)）を選ぶ。配色・形式の既定・文体がまとめて変わる。`default`（解説・ダーク）/ `corporate`（企業向け・ライト）
+- `meta.format` は `dialogue`（掛け合い・立ち絵あり）か `kamishibai`（紙芝居・スライド主役・立ち絵なし）。省略時はテーマの既定
 - `visual` と `bgm` は省略すると**直前のセリフの状態を引き継ぐ**。消すときは `{"type":"none"}`
 - ビジュアルは6型: `none` / `title` / `bullets` / `code` / `compare` / `image`
 - 読み間違える語は `reading` で TTS 用の読みだけ上書きできる（字幕は `text` のまま）

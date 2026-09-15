@@ -146,7 +146,10 @@ export type Format = (typeof FORMATS)[number];
 export const metaSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'id は英小文字・数字・ハイフン'),
   title: z.string().min(1),
-  format: z.enum(FORMATS).default('dialogue'),
+  /** テーマ（themes/<id>/）。配色・形式の既定・文体を束ねる。 */
+  theme: z.string().regex(/^[a-z0-9][a-z0-9-]*$/).default('default'),
+  /** 省略時はテーマの既定に従う。 */
+  format: z.enum(FORMATS).optional(),
   fps: z.number().int().positive().default(30),
   width: z.number().int().positive().default(1920),
   height: z.number().int().positive().default(1080),

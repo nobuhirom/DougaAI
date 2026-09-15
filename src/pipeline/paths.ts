@@ -20,6 +20,8 @@ export const DIRS = {
   bgm: path.join(ROOT, 'assets', 'bgm'),
   characters: path.join(ROOT, 'characters'),
   projects: path.join(ROOT, 'projects'),
+  /** テーマ（配色・形式・文体）。台本の meta.theme で選ぶ。 */
+  themes: path.join(ROOT, 'themes'),
   /** 声のライブラリ。Irodori-TTS-Server の IRODORI_VOICES_DIR もここを指す。 */
   voices: path.join(ROOT, 'voices'),
   /** ネタの書き捨て場（docs/06_全体計画.md 工程1）。 */
@@ -38,6 +40,8 @@ export const scriptPath = (id: string) => path.join(projectDir(id), 'script.json
 export const projectAssetsDir = (id: string) => path.join(projectDir(id), 'assets');
 
 export const characterDir = (id: string) => path.join(DIRS.characters, id);
+export const themeDir = (id: string) => path.join(DIRS.themes, id);
+export const themeConfigPath = (id: string) => path.join(themeDir(id), 'theme.json');
 export const characterConfigPath = (id: string) =>
   path.join(characterDir(id), 'character.json');
 

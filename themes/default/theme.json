@@ -1,0 +1,23 @@
+{
+  "id": "default",
+  "label": "解説（ダーク）",
+  "description": "技術解説向け。暗い背景に白いスライド、キャラクター2人の掛け合い",
+  "format": "dialogue",
+  "colors": {
+    "backgroundTop": "#101726",
+    "backgroundBottom": "#1c2740",
+    "panel": "#f7f9fc",
+    "panelText": "#18202f",
+    "panelMuted": "#5b6779",
+    "accent": "#2f6feb",
+    "accent2": "#8b5cf6",
+    "codeBg": "#141b2b",
+    "codeText": "#e6ecf7",
+    "subtitleBg": "#080c16",
+    "subtitleText": "#ffffff"
+  },
+  "subtitleOpacity": 0.86,
+  "bgm": "calm-01.mp3",
+  "bgmVolume": 0.09,
+  "hasStyleGuide": true
+}

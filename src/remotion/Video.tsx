@@ -5,8 +5,9 @@ import type { Manifest, ManifestLine } from '../schema/manifest.js';
 import { CharacterView } from './components/Character.js';
 import { Subtitle } from './components/Subtitle.js';
 import { FONT_FAMILY, useLoadFonts } from './Fonts.js';
-import { BGM_VOLUME, COLORS, PANEL_KAMISHIBAI, SECTION_CHIP, VOICE_VOLUME } from './theme.js';
+import { PANEL_KAMISHIBAI, SECTION_CHIP, VOICE_VOLUME } from './theme.js';
 import { VisualView } from './visuals/index.js';
+import { ThemeContext, useTheme, withAlpha, type ThemeRuntime } from './ThemeContext.js';
 
 /**
  * 本編のコンポジション。
@@ -55,16 +56,27 @@ function lineAtFrame(lines: ManifestLine[], frame: number): ManifestLine | undef
 }
 
 function Background() {
+  const { colors } = useTheme();
   return (
     <AbsoluteFill
       style={{
-        background: `linear-gradient(160deg, ${COLORS.backgroundTop} 0%, ${COLORS.backgroundBottom} 100%)`,
+        background: `linear-gradient(160deg, ${colors.backgroundTop} 0%, ${colors.backgroundBottom} 100%)`,
       }}
     />
   );
 }
 
+/** 背景が明るいテーマか（札や薄い文字の色を決める）。 */
+function isLight(hex: string): boolean {
+  const n = Number.parseInt(hex.slice(1), 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255 > 0.6;
+}
+
 function SectionChip({ label, kamishibai }: { label: string; kamishibai: boolean }) {
+  const { colors } = useTheme();
+  // 明るい背景では白い札が消えるので、パネルの文字色で描く
+  const ink = isLight(colors.backgroundTop) ? colors.panelText : '#ffffff';
   // 紙芝居はパネルが上に伸びるので、札は右上の余白へ逃がす
   return (
     <div
@@ -78,9 +90,9 @@ function SectionChip({ label, kamishibai }: { label: string; kamishibai: boolean
         alignItems: 'center',
         padding: `0 ${SECTION_CHIP.paddingX}px`,
         borderRadius: 999,
-        background: 'rgba(255, 255, 255, 0.12)',
-        border: '1px solid rgba(255, 255, 255, 0.22)',
-        color: 'rgba(255, 255, 255, 0.85)',
+        background: withAlpha(ink, 0.1),
+        border: `1px solid ${withAlpha(ink, 0.25)}`,
+        color: withAlpha(ink, 0.85),
         fontFamily: FONT_FAMILY,
         fontSize: SECTION_CHIP.fontSize,
         letterSpacing: '0.06em',
@@ -103,7 +115,7 @@ function Foreground({ manifest }: { manifest: Manifest }) {
   const character = manifest.characters[line.character];
   if (!character) return null;
 
-  const kamishibai = manifest.meta.format === 'kamishibai';
+  const kamishibai = manifest.format === 'kamishibai';
 
   return (
     <>
@@ -164,8 +176,15 @@ function VideoBody({ manifest }: { manifest: Manifest }) {
     [manifest.lines],
   );
 
+  const runtime: ThemeRuntime = {
+    colors: manifest.theme.colors,
+    subtitleOpacity: manifest.theme.subtitleOpacity,
+    bgmVolume: manifest.theme.bgmVolume,
+  };
+
   return (
-    <AbsoluteFill style={{ backgroundColor: COLORS.backgroundTop }}>
+    <ThemeContext.Provider value={runtime}>
+    <AbsoluteFill style={{ backgroundColor: manifest.theme.colors.backgroundTop }}>
       <Background />
 
       {/* ビジュアルは同じ内容が続く間ひとまとまりにする。
@@ -176,7 +195,7 @@ function VideoBody({ manifest }: { manifest: Manifest }) {
           from={segment.from}
           durationInFrames={segment.durationInFrames}
         >
-          <VisualView visual={segment.value} projectId={manifest.meta.id} format={manifest.meta.format} />
+          <VisualView visual={segment.value} projectId={manifest.meta.id} format={manifest.format} />
         </Sequence>
       ))}
 
@@ -201,10 +220,11 @@ function VideoBody({ manifest }: { manifest: Manifest }) {
             from={segment.from}
             durationInFrames={segment.durationInFrames}
           >
-            <Audio src={staticFile(segment.value)} volume={BGM_VOLUME} loop />
+            <Audio src={staticFile(segment.value)} volume={runtime.bgmVolume} loop />
           </Sequence>
         ),
       )}
     </AbsoluteFill>
+    </ThemeContext.Provider>
   );
 }

@@ -4,7 +4,8 @@ import { charWidthEm } from '../../layout/subtitle.js';
 import type { Visual } from '../../schema/script.js';
 import { STATIC } from '../../shared/static.js';
 import { FONT_FAMILY, MONO_FAMILY } from '../Fonts.js';
-import { COLORS, FADE_FRAMES, PANEL, PANEL_KAMISHIBAI } from '../theme.js';
+import { FADE_FRAMES, PANEL, PANEL_KAMISHIBAI } from '../theme.js';
+import { useTheme, withAlpha } from '../ThemeContext.js';
 import type { Format } from '../../schema/script.js';
 
 /**
@@ -42,6 +43,7 @@ function useEntrance() {
 function Panel({ children }: { children: React.ReactNode }) {
   const { opacity, translateY } = useEntrance();
   const g = usePanel();
+  const { colors } = useTheme();
   return (
     <div
       style={{
@@ -53,10 +55,10 @@ function Panel({ children }: { children: React.ReactNode }) {
         padding: g.padding,
         boxSizing: 'border-box',
         borderRadius: g.radius,
-        background: COLORS.panel,
+        background: colors.panel,
         boxShadow: '0 24px 60px rgba(0, 0, 0, 0.45)',
         fontFamily: FONT_FAMILY,
-        color: COLORS.panelText,
+        color: colors.panelText,
         opacity,
         transform: `translateY(${translateY}px)`,
         overflow: 'hidden',
@@ -71,6 +73,7 @@ function Panel({ children }: { children: React.ReactNode }) {
 
 function TitleVisual({ text, subtitle }: { text: string; subtitle?: string }) {
   const INNER_HEIGHT = innerHeight(usePanel());
+  const { colors } = useTheme();
   return (
     <Panel>
       <div
@@ -86,7 +89,7 @@ function TitleVisual({ text, subtitle }: { text: string; subtitle?: string }) {
       >
         <div style={{ fontSize: 92, fontWeight: 700, lineHeight: 1.25 }}>{text}</div>
         {subtitle ? (
-          <div style={{ fontSize: 40, color: COLORS.panelMuted, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 40, color: colors.panelMuted, lineHeight: 1.4 }}>
             {subtitle}
           </div>
         ) : null}
@@ -107,6 +110,7 @@ function BulletsVisual({
   highlight?: number;
 }) {
   const frame = useCurrentFrame();
+  const { colors } = useTheme();
   const fontSize = items.length <= 3 ? 48 : items.length <= 5 ? 42 : 36;
 
   return (
@@ -134,7 +138,7 @@ function BulletsVisual({
                 opacity: appear,
                 transform: `translateX(${(1 - appear) * 16}px)`,
                 fontWeight: isHighlighted ? 700 : 400,
-                color: isHighlighted ? COLORS.panelAccent : COLORS.panelText,
+                color: isHighlighted ? colors.accent : colors.panelText,
               }}
             >
               <span
@@ -144,7 +148,7 @@ function BulletsVisual({
                   height: 14,
                   marginTop: fontSize * 0.1,
                   borderRadius: 4,
-                  background: isHighlighted ? COLORS.panelAccent : COLORS.panelMuted,
+                  background: isHighlighted ? colors.accent : colors.panelMuted,
                 }}
               />
               <span>{item}</span>
@@ -189,6 +193,7 @@ function CodeVisual({
   const highlighted = new Set(highlightLines ?? []);
   const gutter = String(lines.length).length;
   const g = usePanel();
+  const { colors } = useTheme();
   const INNER_HEIGHT = innerHeight(g);
   const INNER_WIDTH = innerWidth(g);
 
@@ -218,19 +223,19 @@ function CodeVisual({
           style={{
             fontFamily: MONO_FAMILY,
             fontSize: 26,
-            color: COLORS.panelMuted,
+            color: colors.panelMuted,
             letterSpacing: '0.08em',
           }}
         >
           {language}
         </span>
         {caption ? (
-          <span style={{ fontSize: 28, color: COLORS.panelMuted }}>{caption}</span>
+          <span style={{ fontSize: 28, color: colors.panelMuted }}>{caption}</span>
         ) : null}
       </div>
       <div
         style={{
-          background: COLORS.codeBg,
+          background: colors.codeBg,
           borderRadius: 16,
           padding: '24px 28px',
           width: INNER_WIDTH,
@@ -249,8 +254,8 @@ function CodeVisual({
                 fontFamily: MONO_FAMILY,
                 fontSize,
                 lineHeight: 1.5,
-                color: COLORS.codeText,
-                background: isHighlighted ? COLORS.codeHighlight : 'transparent',
+                color: colors.codeText,
+                background: isHighlighted ? withAlpha(colors.accent, 0.28) : 'transparent',
                 borderRadius: 6,
                 padding: '0 8px',
                 margin: '0 -8px',
@@ -293,6 +298,7 @@ function CompareColumnView({
   delay: number;
 }) {
   const frame = useCurrentFrame();
+  const { colors } = useTheme();
   const appear = interpolate(frame, [delay, delay + FADE_FRAMES], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -330,7 +336,7 @@ function CompareColumnView({
             lineHeight: 1.4,
             padding: '14px 20px',
             borderRadius: 10,
-            background: 'rgba(24, 32, 47, 0.06)',
+            background: withAlpha(colors.panelText, 0.06),
           }}
         >
           {item}
@@ -349,14 +355,15 @@ function CompareVisual({
   left: CompareColumn;
   right: CompareColumn;
 }) {
+  const { colors } = useTheme();
   return (
     <Panel>
       {title ? (
         <div style={{ fontSize: 46, fontWeight: 700, marginBottom: 26 }}>{title}</div>
       ) : null}
       <div style={{ display: 'flex', gap: 40, alignItems: 'flex-start' }}>
-        <CompareColumnView column={left} accent={COLORS.panelAccent} delay={0} />
-        <CompareColumnView column={right} accent="#8b5cf6" delay={5} />
+        <CompareColumnView column={left} accent={colors.accent} delay={0} />
+        <CompareColumnView column={right} accent={colors.accent2} delay={5} />
       </div>
     </Panel>
   );
@@ -376,6 +383,7 @@ function ImageVisual({
   fit: 'contain' | 'cover';
 }) {
   const INNER_HEIGHT = innerHeight(usePanel());
+  const { colors } = useTheme();
   return (
     <Panel>
       <div
@@ -396,7 +404,7 @@ function ImageVisual({
           style={{
             marginTop: 16,
             fontSize: 30,
-            color: COLORS.panelMuted,
+            color: colors.panelMuted,
             textAlign: 'center',
           }}
         >

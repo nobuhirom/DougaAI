@@ -1,0 +1,23 @@
+{
+  "id": "corporate",
+  "label": "企業向け（ライト）",
+  "description": "会社紹介・資料の動画化向け。明るい背景、控えめな装飾、アナウンサー風のナレーション",
+  "format": "kamishibai",
+  "colors": {
+    "backgroundTop": "#eef2f7",
+    "backgroundBottom": "#dfe6ef",
+    "panel": "#ffffff",
+    "panelText": "#1f2a3d",
+    "panelMuted": "#6b7a90",
+    "accent": "#0f5fa8",
+    "accent2": "#1f8a70",
+    "codeBg": "#1f2a3d",
+    "codeText": "#f1f5fa",
+    "subtitleBg": "#1f2a3d",
+    "subtitleText": "#ffffff"
+  },
+  "subtitleOpacity": 0.92,
+  "bgm": "calm-01.mp3",
+  "bgmVolume": 0.06,
+  "hasStyleGuide": true
+}

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { characterSchema } from './character.js';
+import { themeSchema } from './theme.js';
 import { emotionSchema, metaSchema, sectionTypeSchema, visualSchema } from './script.js';
 
 /**
@@ -13,7 +14,7 @@ import { emotionSchema, metaSchema, sectionTypeSchema, visualSchema } from './sc
  */
 
 /** マニフェストの構造が変わったら上げる。古いマニフェストを弾くために使う。 */
-export const MANIFEST_VERSION = 1;
+export const MANIFEST_VERSION = 2;
 
 export const manifestLineSchema = z.object({
   id: z.string(),
@@ -56,6 +57,10 @@ export const manifestSchema = z.object({
   version: z.literal(MANIFEST_VERSION),
   builtAt: z.string(),
   meta: metaSchema,
+  /** テーマを丸ごと埋め込む。Remotion は配色をここから読む。 */
+  theme: themeSchema,
+  /** テーマの既定と台本の指定から確定した形式。 */
+  format: z.enum(['dialogue', 'kamishibai']),
   /** 台本が参照するキャラクター定義を丸ごと埋め込む。 */
   characters: z.record(z.string(), characterSchema),
   /** staticFile() に渡すフォントの相対パス。 */

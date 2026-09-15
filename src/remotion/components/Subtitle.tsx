@@ -1,6 +1,7 @@
 import type { Character } from '../../schema/character.js';
 import { FONT_FAMILY } from '../Fonts.js';
-import { COLORS, NAMEPLATE, SUBTITLE } from '../theme.js';
+import { NAMEPLATE, SUBTITLE } from '../theme.js';
+import { useTheme, withAlpha } from '../ThemeContext.js';
 
 /**
  * 字幕帯と話者名。
@@ -18,6 +19,7 @@ export interface SubtitleProps {
 }
 
 export function Subtitle({ lines, character, showName = true }: SubtitleProps) {
+  const { colors, subtitleOpacity } = useTheme();
   return (
     <>
       {showName ? <div
@@ -51,7 +53,7 @@ export function Subtitle({ lines, character, showName = true }: SubtitleProps) {
           height: SUBTITLE.height,
           padding: `${SUBTITLE.paddingY}px ${SUBTITLE.paddingX}px`,
           borderRadius: SUBTITLE.radius,
-          background: COLORS.subtitleBg,
+          background: withAlpha(colors.subtitleBg, subtitleOpacity),
           border: `2px solid ${character.color}`,
           boxSizing: 'border-box',
           display: 'flex',
@@ -68,7 +70,7 @@ export function Subtitle({ lines, character, showName = true }: SubtitleProps) {
               fontWeight: 500,
               fontSize: SUBTITLE.fontSize,
               lineHeight: SUBTITLE.lineHeight,
-              color: COLORS.subtitleText,
+              color: colors.subtitleText,
               whiteSpace: 'pre',
               textShadow: '0 2px 8px rgba(0, 0, 0, 0.6)',
             }}

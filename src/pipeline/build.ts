@@ -34,6 +34,7 @@ import {
   validateScript,
 } from './validate.js';
 import { voiceById } from './voices.js';
+import { loadTheme } from './themes.js';
 
 /**
  * 台本 → マニフェストのビルド。
@@ -126,6 +127,9 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   const issues = validateScript(script, characters);
   if (issues.length > 0) throw new ValidationError(issues);
 
+  const theme = loadTheme(script.meta.theme);
+  const format = script.meta.format ?? theme.format;
+
   const backend = createBackend(backendId);
   const entries = flattenLines(script);
   notify(`${entries.length} セリフ / TTS: ${backend.id}`);
@@ -140,9 +144,9 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
   const lines: ManifestLine[] = [];
   const durations: { lineId: string; seconds: number }[] = [];
   let startFrame = 0;
-  let currentBgm: string | null = script.meta.bgm
-    ? STATIC.bgm(script.meta.bgm)
-    : null;
+  // BGM は台本 > テーマの既定。テーマの既定が実在しなければ無音にする
+  const defaultBgm = script.meta.bgm ?? (theme.bgm && fs.existsSync(path.join(DIRS.bgm, theme.bgm)) ? theme.bgm : undefined);
+  let currentBgm: string | null = defaultBgm ? STATIC.bgm(defaultBgm) : null;
   // visual と bgm は同じ規則で引き継ぐ。省略したセリフは直前の表示を保つ。
   // 掛け合いが数行続く間ずっとスライドを出しておきたい、という書き方に合わせる。
   // 明示的に消すときは {"type":"none"} と書く。
@@ -257,6 +261,8 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
     version: MANIFEST_VERSION,
     builtAt: new Date().toISOString(),
     meta: script.meta,
+    theme,
+    format,
     characters,
     fonts,
     totalDurationInFrames: Math.max(1, startFrame),

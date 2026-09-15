@@ -13,6 +13,20 @@ import {
   listProjects as listStepProjects,
 } from '../pipeline/steps.js';
 import { KIND_LABELS, type Idea } from '../schema/idea.js';
+import { readStyleGuide } from '../pipeline/themes.js';
+import { scriptPath } from '../pipeline/paths.js';
+
+/** 台本があればその theme、無ければ default。企画メモ段階でも文体を案内するため。 */
+function readThemeId(projectId: string): string | null {
+  try {
+    const file = scriptPath(projectId);
+    if (!fs.existsSync(file)) return 'default';
+    const meta = (JSON.parse(fs.readFileSync(file, 'utf-8')) as { meta?: { theme?: string } }).meta;
+    return meta?.theme ?? 'default';
+  } catch {
+    return null;
+  }
+}
 import { startUi } from '../ui/server.js';
 import { DIRS, outPath } from '../pipeline/paths.js';
 import {
@@ -346,6 +360,10 @@ function cmdNext(projectId: string): void {
 
   if (step.prompt) {
     process.stdout.write(`\n手順書:   prompts/${step.prompt}\n`);
+    const themeId = readThemeId(projectId);
+    if (themeId && readStyleGuide(themeId)) {
+      process.stdout.write(`文体:     themes/${themeId}/style.md（手順書の末尾に足して読ませる）\n`);
+    }
     process.stdout.write(
       `\nこの工程はエージェントが行う。手順書と入力の成果物を読ませて\n` +
         `${step.artifact} を書かせたあと、npm run douga -- check ${projectId} で検証する。\n`,

@@ -2,28 +2,64 @@
   "meta": {
     "id": "kamishibai-sample",
     "title": "紙芝居形式の確認",
-    "format": "kamishibai",
-    "characters": ["narrator"],
-    "bgm": "calm-01.mp3"
+    "characters": [
+      "narrator"
+    ],
+    "bgm": "calm-01.mp3",
+    "theme": "corporate"
   },
   "sections": [
     {
       "type": "introduction",
       "name": "導入",
       "lines": [
-        { "id": "s0_intro_001", "character": "narrator", "text": "この動画は、資料を紙芝居のように見せる形式です。",
-          "visual": { "type": "title", "text": "紙芝居形式", "subtitle": "スライドとナレーションだけで構成する" } },
-        { "id": "s0_intro_002", "character": "narrator", "text": "キャラクターは出ません。画面はスライドが主役になります。" }
+        {
+          "id": "s0_intro_001",
+          "character": "narrator",
+          "text": "この動画は、資料を紙芝居のように見せる形式です。",
+          "visual": {
+            "type": "title",
+            "text": "紙芝居形式",
+            "subtitle": "スライドとナレーションだけで構成する"
+          }
+        },
+        {
+          "id": "s0_intro_002",
+          "character": "narrator",
+          "text": "キャラクターは出ません。画面はスライドが主役になります。"
+        }
       ]
     },
     {
       "type": "main",
       "name": "本編",
       "lines": [
-        { "id": "s1_main_001", "character": "narrator", "text": "台本の構造は掛け合い形式と同じです。",
-          "visual": { "type": "bullets", "title": "掛け合い形式との違い", "items": ["立ち絵を出さない", "パネルを画面いっぱいに使う", "話者の名札を出さない", "台本の構造は共通"], "highlight": 1 } },
-        { "id": "s1_main_002", "character": "narrator", "text": "資料の図表は、画像としてそのまま貼ります。",
-          "visual": { "type": "image", "src": "pipeline.png", "caption": "資料の図をそのまま載せる" } }
+        {
+          "id": "s1_main_001",
+          "character": "narrator",
+          "text": "台本の構造は掛け合い形式と同じです。",
+          "visual": {
+            "type": "bullets",
+            "title": "掛け合い形式との違い",
+            "items": [
+              "立ち絵を出さない",
+              "パネルを画面いっぱいに使う",
+              "話者の名札を出さない",
+              "台本の構造は共通"
+            ],
+            "highlight": 1
+          }
+        },
+        {
+          "id": "s1_main_002",
+          "character": "narrator",
+          "text": "資料の図表は、画像としてそのまま貼ります。",
+          "visual": {
+            "type": "image",
+            "src": "pipeline.png",
+            "caption": "資料の図をそのまま載せる"
+          }
+        }
       ]
     }
   ]

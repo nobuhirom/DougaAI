@@ -216,6 +216,11 @@ export function validateScript(
     }
   }
 
+  // --- 4. テーマの存在 ---
+  if (!fs.existsSync(path.join(DIRS.themes, script.meta.theme, 'theme.json'))) {
+    issues.push({ code: 'missing-theme', message: `テーマが見つからない: themes/${script.meta.theme}/theme.json` });
+  }
+
   // --- 4. 声の参照（ライブラリに登録されているか）---
   issues.push(...validateVoiceLibrary());
   for (const [characterId, character] of Object.entries(characters)) {

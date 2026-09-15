@@ -16,6 +16,16 @@
       "surprised": "expressions/normal.png",
       "thinking": "expressions/normal.png",
       "trouble": "expressions/normal.png"
+    },
+    "mouth": {
+      "frames": {
+        "closed": "mouth/closed.png",
+        "half": "mouth/half.png",
+        "open": "mouth/open.png"
+      },
+      "x": 488,
+      "y": 388,
+      "width": 110
     }
   },
   "voice": {
