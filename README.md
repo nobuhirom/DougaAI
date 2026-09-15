@@ -146,4 +146,5 @@ npm run douga -- check kinsoku  # 書けたものを機械的に検証する
 - [docs/04_要件定義.md](docs/04_要件定義.md) — スコープ・データモデル・完成の定義
 - [docs/05_TTS導入.md](docs/05_TTS導入.md) — Irodori TTS の接続と運用
 - [docs/06_全体計画.md](docs/06_全体計画.md) — 12工程の全体像と実装順
+- [docs/07_品質方針.md](docs/07_品質方針.md) — 音声・絵・画面の質をどう上げるか（GPT Images の使いどころ）
 - [prompts/](prompts/) — AI 工程の手順書
