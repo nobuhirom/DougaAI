@@ -1,0 +1,3 @@
+{"id":"imu2qj60l","text":"Remotion の calculateMetadata は何のためにあるのか。音声長から尺を決める話とセットで整理したい","tags":["remotion","動画"],"createdAt":"2026-09-15T13:56:16.821Z","status":"inbox"}
+{"id":"imu2qj65t","text":"日本語の禁則処理を自前で書くとき、どこまでやれば実用になるのか","tags":["日本語"],"createdAt":"2026-09-15T13:56:17.009Z","status":"picked","projectId":"kinsoku"}
+{"id":"imu2qj6b1","text":"TTS を差し替え可能にする設計。ローカルモデルとクラウドAPIの境目","tags":[],"createdAt":"2026-09-15T13:56:17.197Z","status":"inbox"}

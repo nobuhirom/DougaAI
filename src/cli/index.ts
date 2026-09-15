@@ -4,6 +4,15 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { build, readManifest } from '../pipeline/build.js';
 import { doctor } from '../pipeline/doctor.js';
+import { addIdea, dropIdea, pickIdea, readInbox } from '../pipeline/ideas.js';
+import {
+  nextStep,
+  projectStatus,
+  readIdea,
+  listProjects as listStepProjects,
+} from '../pipeline/steps.js';
+import { KIND_LABELS, type Idea } from '../schema/idea.js';
+import { startUi } from '../ui/server.js';
 import { DIRS, outPath } from '../pipeline/paths.js';
 import {
   ValidationError,
@@ -43,6 +52,7 @@ const USAGE = `使い方:
   --force           音声キャッシュを無視して作り直す
   --preset <name>   render のみ。draft | final（既定: final）
   --concurrency <n> render のみ。並列数。既定は Remotion の自動判定
+  --port <n>        ui のみ。待ち受けポート（既定 4321）
 `;
 
 function fail(message: string): never {
@@ -203,6 +213,142 @@ async function cmdPreview(projectId: string): Promise<void> {
   ]);
 }
 
+// --- 制作の流れ --------------------------------------------------------------
+
+const STATE_MARK: Record<string, string> = {
+  done: 'OK  ',
+  invalid: 'NG  ',
+  ready: '→   ',
+  blocked: '--  ',
+};
+
+const EXECUTOR_LABEL: Record<string, string> = {
+  human: '人間',
+  agent: 'エージェント',
+  machine: '機械',
+};
+
+function cmdIdeaAdd(text: string | undefined, tags: string[]): void {
+  if (!text || text.trim() === '') fail('ネタの本文を指定する');
+  const idea = addIdea(text, tags);
+  process.stdout.write(`${idea.id}  ${idea.text}\n`);
+}
+
+function cmdIdeaList(): void {
+  const { ideas, broken } = readInbox();
+  for (const b of broken) {
+    process.stderr.write(`  [壊れた行] inbox.jsonl:${b.line} ${b.reason}\n`);
+  }
+  if (ideas.length === 0) {
+    process.stdout.write('ネタがない。npm run douga -- idea add "…" で足す\n');
+    return;
+  }
+  const mark = { inbox: '  ', picked: '→ ', dropped: 'x ' } as const;
+  for (const i of ideas) {
+    const tail =
+      i.status === 'picked'
+        ? `  → projects/${i.projectId}`
+        : i.status === 'dropped'
+          ? `  （見送り: ${i.reason ?? ''}）`
+          : '';
+    const tags = i.tags.length > 0 ? `  [${i.tags.join(' ')}]` : '';
+    process.stdout.write(`${mark[i.status]}${i.id}  ${i.text}${tags}${tail}\n`);
+  }
+  const open = ideas.filter((i) => i.status === 'inbox').length;
+  process.stdout.write(`\n未着手 ${open} 件 / 全 ${ideas.length} 件\n`);
+}
+
+function cmdIdeaPick(ideaId: string | undefined, projectId: string | undefined, kind: string | undefined): void {
+  if (!ideaId || !projectId) fail('使い方: idea pick <ideaId> <projectId> [--kind explainer|study|document]');
+  const k = kind as Idea['kind'] | undefined;
+  if (k !== undefined && !(k in KIND_LABELS)) {
+    fail(`未知の kind: ${kind}（${Object.keys(KIND_LABELS).join(' | ')}）`);
+  }
+  const idea = pickIdea({ ideaId, projectId, kind: k });
+  process.stdout.write(
+    `projects/${projectId}/idea.json を作った\n` +
+      `  タイトル: ${idea.title}\n` +
+      `  用途:     ${KIND_LABELS[idea.kind]}\n\n` +
+      `次: npm run douga -- next ${projectId}\n`,
+  );
+}
+
+function cmdStatus(projectId: string): void {
+  const idea = readIdea(projectId);
+  if (idea) {
+    process.stdout.write(`${idea.title}（${projectId} / ${KIND_LABELS[idea.kind]}）\n\n`);
+  } else {
+    process.stdout.write(`${projectId}\n\n`);
+  }
+
+  for (const s of projectStatus(projectId)) {
+    const mark = STATE_MARK[s.state] ?? '?   ';
+    process.stdout.write(
+      `${mark}${s.step.label.padEnd(8)} ${EXECUTOR_LABEL[s.step.executor]?.padEnd(6) ?? ''} ${s.step.artifact}\n`,
+    );
+    for (const issue of s.issues) {
+      process.stdout.write(`      [${issue.code}]${issue.lineId ? ` ${issue.lineId}` : ''} ${issue.message}\n`);
+    }
+  }
+}
+
+function cmdNext(projectId: string): void {
+  const next = nextStep(projectId);
+  if (!next) {
+    process.stdout.write(`${projectId}: 台本まで揃っている\n次: npm run douga -- render ${projectId}\n`);
+    return;
+  }
+
+  const { step, state, issues } = next;
+  process.stdout.write(`次の工程: ${step.label}（${EXECUTOR_LABEL[step.executor]}）\n`);
+  process.stdout.write(`出力先:   projects/${projectId}/${step.artifact}\n`);
+
+  if (state === 'blocked') {
+    process.stdout.write(
+      `\nまだ着手できない。先にこれを終わらせる: ${step.requires.join(', ')}\n`,
+    );
+    return;
+  }
+
+  if (state === 'invalid') {
+    process.stdout.write(`\n成果物はあるが、${issues.length} 件の問題がある:\n`);
+    for (const issue of issues) {
+      process.stdout.write(`  [${issue.code}]${issue.lineId ? ` ${issue.lineId}` : ''} ${issue.message}\n`);
+    }
+  }
+
+  if (step.prompt) {
+    process.stdout.write(`\n手順書:   prompts/${step.prompt}\n`);
+    process.stdout.write(
+      `\nこの工程はエージェントが行う。手順書と入力の成果物を読ませて\n` +
+        `${step.artifact} を書かせたあと、npm run douga -- check ${projectId} で検証する。\n`,
+    );
+  } else {
+    process.stdout.write(`\nこの工程は人間が行う。\n`);
+  }
+}
+
+function cmdCheck(projectId: string): void {
+  const statuses = projectStatus(projectId);
+  const withIssues = statuses.filter((s) => s.issues.length > 0);
+
+  for (const s of statuses) {
+    if (!s.exists) continue;
+    const mark = s.issues.length === 0 ? 'OK  ' : 'NG  ';
+    process.stdout.write(`${mark}${s.step.label}  ${s.step.artifact}\n`);
+    for (const issue of s.issues) {
+      process.stdout.write(`      [${issue.code}]${issue.lineId ? ` ${issue.lineId}` : ''} ${issue.message}\n`);
+    }
+  }
+
+  if (withIssues.length > 0) {
+    const total = withIssues.reduce((n, s) => n + s.issues.length, 0);
+    process.stderr.write(`\n${total} 件の問題がある\n`);
+    process.exit(1);
+  }
+  process.stdout.write('\n問題なし\n');
+}
+
 async function cmdDoctor(): Promise<void> {
   const results = await doctor();
   for (const r of results) {
@@ -254,6 +400,9 @@ async function main(): Promise<void> {
       tts: { type: 'string' },
       force: { type: 'boolean', default: false },
       preset: { type: 'string', default: 'final' },
+      tag: { type: 'string', multiple: true },
+      kind: { type: 'string' },
+      port: { type: 'string' },
       concurrency: { type: 'string' },
       help: { type: 'boolean', default: false },
     },
@@ -268,6 +417,58 @@ async function main(): Promise<void> {
 
   if (command === 'doctor') {
     await cmdDoctor();
+    return;
+  }
+
+  if (command === 'ui') {
+    const port = Number(values.port ?? 4321);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) {
+      fail(`ポートが不正: ${values.port}`);
+    }
+    await startUi({ port });
+    process.stdout.write(
+      `制作画面: http://127.0.0.1:${port}\n` +
+        `\nこの画面は見る・選ぶ・直すためのもので、AI は呼ばない。\n` +
+        `生成はエージェントが端末側で行う（docs/06_全体計画.md 4章）。\n` +
+        `\n終了は Ctrl+C\n`,
+    );
+    return;
+  }
+
+  if (command === 'idea') {
+    const [sub, a, b] = positionals.slice(1);
+    switch (sub) {
+      case 'add':
+        cmdIdeaAdd(a, values.tag ?? []);
+        return;
+      case 'list':
+      case undefined:
+        cmdIdeaList();
+        return;
+      case 'drop':
+        if (!a) fail('使い方: idea drop <ideaId> <理由>');
+        dropIdea(a, b ?? '');
+        process.stdout.write(`${a} を見送りにした\n`);
+        return;
+      case 'pick':
+        cmdIdeaPick(a, b, values.kind);
+        return;
+      default:
+        fail(`未知のサブコマンド: idea ${sub}（add | list | drop | pick）`);
+    }
+  }
+
+  if (command === 'projects') {
+    const ids = listStepProjects();
+    if (ids.length === 0) process.stdout.write('プロジェクトがない\n');
+    for (const id of ids) {
+      const idea = readIdea(id);
+      const next = nextStep(id);
+      process.stdout.write(
+        `${id.padEnd(20)} ${next ? `次: ${next.step.label}` : '台本まで完了'}` +
+          `${idea ? `  — ${idea.title}` : ''}\n`,
+      );
+    }
     return;
   }
 
@@ -294,6 +495,15 @@ async function main(): Promise<void> {
       return;
     case 'info':
       cmdInfo(requireProjectId(projectArg));
+      return;
+    case 'status':
+      cmdStatus(requireProjectId(projectArg));
+      return;
+    case 'next':
+      cmdNext(requireProjectId(projectArg));
+      return;
+    case 'check':
+      cmdCheck(requireProjectId(projectArg));
       return;
     default:
       fail(`未知のコマンド: ${command}\n${USAGE}`);

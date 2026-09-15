@@ -27,9 +27,29 @@ AI とプログラミングで解説動画を作るシステムを開発する�
 
 ```bash
 npm install
-npm run douga -- doctor          # 前提が揃っているか確認する
-npm run douga -- render sample   # 台本 → MP4
+npm run douga -- doctor   # 前提が揃っているか確認する
+npm run douga -- ui       # 制作画面（http://127.0.0.1:4321）
 ```
+
+### 制作の流れ
+
+```
+ネタ決め → 企画メモ → 調査 → 台本 → 音声 → 組み立て
+ 人間      エージェント        機械
+```
+
+| コマンド | 内容 |
+| --- | --- |
+| `douga idea add "<本文>"` | ネタを書き捨てる（起点は人間） |
+| `douga idea list` | ネタの一覧 |
+| `douga idea pick <ideaId> <projectId>` | ネタをプロジェクトにする |
+| `douga status <id>` | 工程の現在地 |
+| `douga next <id>` | 次にやることと手順書を出す |
+| `douga check <id>` | いまの成果物を検証する |
+| `douga projects` | プロジェクトの一覧 |
+| `douga ui` | 制作画面を開く |
+
+### 動画にする
 
 | コマンド | 内容 |
 | --- | --- |
@@ -78,12 +98,30 @@ npm run douga -- render sample   # 台本 → MP4
 立ち絵は画像がなくても動く（`appearance.kind: "placeholder"` が SVG で描く）。
 実素材ができたら `sprite` に切り替える。
 
+## AI 工程の動かし方
+
+企画メモ・調査・台本の生成は、**コーディングエージェントがファイルを読み書きする形**で行う。
+パイプラインは LLM を呼ばない。手順書は [prompts/](prompts/) にある。
+
+```bash
+npm run douga -- next kinsoku   # 次の工程と手順書を教えてくれる
+# → エージェントに prompts/02_plan.md と idea.json を読ませて plan.md を書かせる
+npm run douga -- check kinsoku  # 書けたものを機械的に検証する
+```
+
+こうしている理由は**従量課金を持ち込まないため**。LLM の API を叩く設計にすると
+1本ごとに課金が乗り、「何本作っても定額」が崩れる（[docs/06_全体計画.md](docs/06_全体計画.md) 1章）。
+
+制作画面も同じ方針で、**見る・選ぶ・直す**だけを担う。画面から AI は呼ばない。
+
 ## 状況
 
 - 2026-09-15: 先行事例の調査を実施。`docs/` に調査メモと論点を整理
 - 2026-09-15: 公式ドキュメントで裏を取り、レンダリング基盤と TTS を決定。要件定義を作成
 - 2026-09-15: フェーズ1（MVP）を実装。`projects/sample` から `out/sample.mp4` が出るところまで到達
-- 次: 公開用音声（Irodori TTS）への切り替えと、フェーズ2（台本の AI 生成）
+- 2026-09-15: 12工程すべてを作る方針に拡張。[docs/06_全体計画.md](docs/06_全体計画.md) を作成
+- 2026-09-15: フェーズ2（ネタ→企画→調査→台本）と制作画面を実装
+- 次: フェーズ3（レビューと改善ループ）、公開用音声への切り替え
 
 ## ドキュメント
 
@@ -92,3 +130,5 @@ npm run douga -- render sample   # 台本 → MP4
 - [docs/03_方式決定.md](docs/03_方式決定.md) — レンダリング基盤と TTS の決定
 - [docs/04_要件定義.md](docs/04_要件定義.md) — スコープ・データモデル・完成の定義
 - [docs/05_TTS導入.md](docs/05_TTS導入.md) — Irodori TTS の接続と運用
+- [docs/06_全体計画.md](docs/06_全体計画.md) — 12工程の全体像と実装順
+- [prompts/](prompts/) — AI 工程の手順書

@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DougaAI — 制作</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #161d2c;
+    --panel-2: #1d263a;
+    --line: #2a3550;
+    --text: #e8edf7;
+    --muted: #8b97ae;
+    --accent: #4b8bf5;
+    --pink: #e0609a;
+    --ok: #46b97a;
+    --ng: #e0625c;
+    --warn: #d9a441;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+  header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  header h1 { margin: 0; font-size: 19px; letter-spacing: .04em; }
+  header .sub { color: var(--muted); font-size: 13px; }
+  main {
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.2fr);
+    gap: 20px;
+    padding: 20px 24px 48px;
+    align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  section > h2 {
+    margin: 0;
+    padding: 14px 18px;
+    font-size: 14px;
+    letter-spacing: .08em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+    font-weight: 600;
+  }
+  .body { padding: 16px 18px; }
+
+  textarea, input[type=text], select {
+    width: 100%;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font: inherit;
+    resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(1.1); }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 400; padding: 5px 10px; font-size: 13px; }
+  button.ghost:hover { color: var(--text); border-color: var(--accent); }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .spacer { flex: 1; }
+
+  ul.ideas { list-style: none; margin: 0; padding: 0; }
+  ul.ideas li {
+    padding: 12px 0;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  ul.ideas li:first-child { border-top: 0; }
+  ul.ideas li.dropped { opacity: .45; }
+  .idea-text { flex: 1; word-break: break-word; }
+  .idea-meta { color: var(--muted); font-size: 12px; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .tag { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-size: 12px; }
+  .idea-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .proj { border-top: 1px solid var(--line); padding: 14px 0; }
+  .proj:first-child { border-top: 0; }
+  .proj h3 { margin: 0 0 2px; font-size: 16px; }
+  .proj .id { color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; }
+  .steps { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+  .step {
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px 12px;
+    font-size: 12.5px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    cursor: pointer;
+    background: transparent;
+    color: var(--text);
+    font-weight: 400;
+  }
+  .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
+  .step.done .dot { background: var(--ok); }
+  .step.invalid .dot { background: var(--ng); }
+  .step.ready .dot { background: var(--warn); }
+  .step.blocked { opacity: .45; }
+  .step.selected { border-color: var(--accent); }
+
+  .issues { margin: 10px 0 0; padding: 10px 12px; background: rgba(224,98,92,.1); border: 1px solid rgba(224,98,92,.35); border-radius: 8px; font-size: 13px; }
+  .issues code { color: var(--ng); font-size: 12px; }
+
+  pre.artifact {
+    margin: 12px 0 0;
+    padding: 14px;
+    background: #0b101a;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: auto;
+    max-height: 420px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .hint { color: var(--muted); font-size: 13px; }
+  .hint code, .cmd {
+    font-family: ui-monospace, monospace;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    padding: 1px 6px;
+    font-size: 12.5px;
+  }
+  .empty { color: var(--muted); padding: 8px 0; }
+  .error { color: var(--ng); font-size: 13px; margin-top: 8px; }
+  dialog {
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); border-radius: 12px;
+    padding: 20px; min-width: 340px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,.6); }
+</style>
+</head>
+<body>
+<header>
+  <h1>DougaAI</h1>
+  <span class="sub">ネタ出しから台本まで。生成はエージェントが端末側で行います</span>
+</header>
+
+<main>
+  <section>
+    <h2>ネタ</h2>
+    <div class="body">
+      <textarea id="ideaText" rows="3" placeholder="気になったことをそのまま。整える必要はありません（⌘/Ctrl + Enter で追加）"></textarea>
+      <label for="ideaTags">タグ（空白区切り・任意）</label>
+      <input id="ideaTags" type="text" placeholder="remotion 日本語">
+      <div class="row" style="margin-top:12px">
+        <button id="addIdea">追加</button>
+        <span class="spacer"></span>
+        <label style="margin:0"><input type="checkbox" id="showDropped"> 見送りも表示</label>
+      </div>
+      <div id="ideaError" class="error" hidden></div>
+      <ul class="ideas" id="ideaList" style="margin-top:16px"></ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>制作中</h2>
+    <div class="body" id="projects"></div>
+  </section>
+</main>
+
+<dialog id="pickDialog">
+  <form method="dialog" id="pickForm">
+    <h3 style="margin:0 0 4px">プロジェクトにする</h3>
+    <p class="hint" id="pickSource" style="margin:0 0 14px"></p>
+    <label for="pickId">プロジェクト ID（英小文字・数字・ハイフン）</label>
+    <input id="pickId" type="text" required pattern="[a-z0-9][a-z0-9-]*">
+    <label for="pickTitle">仮タイトル（任意）</label>
+    <input id="pickTitle" type="text">
+    <label for="pickKind">用途</label>
+    <select id="pickKind">
+      <option value="explainer">解説動画（公開）</option>
+      <option value="study">自分専用の学習動画</option>
+      <option value="document">資料の動画化</option>
+    </select>
+    <div id="pickError" class="error" hidden></div>
+    <div class="row" style="margin-top:16px">
+      <button value="ok">作る</button>
+      <button type="button" class="ghost" id="pickCancel">やめる</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function api(path, options) {
+  const res = await fetch(path, {
+    ...options,
+    headers: options?.body ? { 'content-type': 'application/json' } : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+  return data;
+}
+
+function showError(el, message) {
+  el.textContent = message;
+  el.hidden = !message;
+}
+
+// --- ネタ --------------------------------------------------------------------
+
+let ideas = [];
+
+async function loadIdeas() {
+  const data = await api('/api/ideas');
+  ideas = data.ideas;
+  if (data.broken.length > 0) {
+    showError($('ideaError'), `inbox.jsonl に読めない行が ${data.broken.length} 件あります`);
+  }
+  renderIdeas();
+}
+
+function renderIdeas() {
+  const showDropped = $('showDropped').checked;
+  const list = ideas.filter((i) => showDropped || i.status !== 'dropped');
+  const ul = $('ideaList');
+
+  if (list.length === 0) {
+    ul.innerHTML = '<li class="empty">まだネタがありません。上に書いて追加してください。</li>';
+    return;
+  }
+
+  ul.innerHTML = list.map((i) => {
+    const tags = i.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join(' ');
+    const meta = [];
+    if (i.status === 'picked') meta.push(`→ projects/${esc(i.projectId)}`);
+    if (i.status === 'dropped') meta.push(`見送り${i.reason ? '：' + esc(i.reason) : ''}`);
+    meta.push(new Date(i.createdAt).toLocaleString('ja-JP'));
+
+    const actions = i.status === 'inbox'
+      ? `<button class="ghost" data-pick="${esc(i.id)}">企画にする</button>
+         <button class="ghost" data-drop="${esc(i.id)}">見送る</button>`
+      : i.status === 'dropped'
+        ? `<button class="ghost" data-restore="${esc(i.id)}">戻す</button>`
+        : '';
+
+    return `<li class="${i.status}">
+      <div class="idea-text">
+        ${esc(i.text)}
+        <div class="idea-meta">${tags}${meta.map((m) => `<span>${m}</span>`).join('')}</div>
+      </div>
+      <div class="idea-actions">${actions}</div>
+    </li>`;
+  }).join('');
+}
+
+$('addIdea').addEventListener('click', async () => {
+  const text = $('ideaText').value.trim();
+  if (!text) return;
+  const tags = $('ideaTags').value.split(/\s+/).filter(Boolean);
+  try {
+    await api('/api/ideas', { method: 'POST', body: JSON.stringify({ text, tags }) });
+    $('ideaText').value = '';
+    $('ideaTags').value = '';
+    showError($('ideaError'), '');
+    await loadIdeas();
+  } catch (e) {
+    showError($('ideaError'), e.message);
+  }
+});
+
+$('ideaText').addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') $('addIdea').click();
+});
+
+$('showDropped').addEventListener('change', renderIdeas);
+
+$('ideaList').addEventListener('click', async (e) => {
+  const drop = e.target.dataset?.drop;
+  const restore = e.target.dataset?.restore;
+  const pick = e.target.dataset?.pick;
+  try {
+    if (drop) {
+      const reason = prompt('見送る理由（任意）') ?? '';
+      await api(`/api/ideas/${encodeURIComponent(drop)}/drop`, {
+        method: 'POST', body: JSON.stringify({ reason }),
+      });
+      await loadIdeas();
+    } else if (restore) {
+      await api(`/api/ideas/${encodeURIComponent(restore)}/restore`, { method: 'POST' });
+      await loadIdeas();
+    } else if (pick) {
+      openPick(pick);
+    }
+  } catch (err) {
+    showError($('ideaError'), err.message);
+  }
+});
+
+// --- 企画にする --------------------------------------------------------------
+
+let pickingId = null;
+
+function openPick(id) {
+  const idea = ideas.find((i) => i.id === id);
+  pickingId = id;
+  $('pickSource').textContent = idea ? idea.text : '';
+  $('pickId').value = '';
+  $('pickTitle').value = idea ? idea.text.slice(0, 40) : '';
+  showError($('pickError'), '');
+  $('pickDialog').showModal();
+}
+
+$('pickCancel').addEventListener('click', () => $('pickDialog').close());
+
+$('pickForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  try {
+    await api(`/api/ideas/${encodeURIComponent(pickingId)}/pick`, {
+      method: 'POST',
+      body: JSON.stringify({
+        projectId: $('pickId').value.trim(),
+        title: $('pickTitle').value.trim(),
+        kind: $('pickKind').value,
+      }),
+    });
+    $('pickDialog').close();
+    await Promise.all([loadIdeas(), loadProjects()]);
+  } catch (err) {
+    showError($('pickError'), err.message);
+  }
+});
+
+// --- プロジェクト ------------------------------------------------------------
+
+let projects = [];
+let openStep = {};   // projectId -> stepId
+let artifacts = {};  // projectId -> { stepId: content }
+
+async function loadProjects() {
+  projects = await api('/api/projects');
+  renderProjects();
+}
+
+const EXECUTOR = { human: '人間', agent: 'エージェント', machine: '機械' };
+
+function renderProjects() {
+  const el = $('projects');
+  if (projects.length === 0) {
+    el.innerHTML = '<div class="empty">まだありません。左のネタから「企画にする」を押してください。</div>';
+    return;
+  }
+
+  el.innerHTML = projects.map((p) => {
+    const steps = p.steps.map((s) => `
+      <button class="step ${s.state} ${openStep[p.id] === s.id ? 'selected' : ''}"
+              data-project="${esc(p.id)}" data-step="${esc(s.id)}">
+        <span class="dot"></span>${esc(s.label)}
+      </button>`).join('');
+
+    const current = p.steps.find((s) => s.id === openStep[p.id]);
+    let detail = '';
+
+    if (current) {
+      if (current.issues.length > 0) {
+        detail += `<div class="issues">${current.issues.map((i) =>
+          `<div><code>${esc(i.code)}</code> ${i.lineId ? esc(i.lineId) + ' ' : ''}${esc(i.message)}</div>`
+        ).join('')}</div>`;
+      }
+      const content = artifacts[p.id]?.[current.id];
+      if (content) {
+        detail += `<pre class="artifact">${esc(content)}</pre>`;
+      } else if (!current.exists) {
+        const how = current.prompt
+          ? `この工程は<b>エージェント</b>が行います。手順書 <span class="cmd">prompts/${esc(current.prompt)}</span> を読ませて
+             <span class="cmd">projects/${esc(p.id)}/${esc(current.artifact)}</span> を書かせてください。`
+          : 'この工程は<b>人間</b>が行います。';
+        detail += `<p class="hint" style="margin-top:12px">${how}<br>
+          端末で <span class="cmd">npm run douga -- next ${esc(p.id)}</span> を実行すると、同じ案内が出ます。</p>`;
+      }
+    }
+
+    const nextLabel = p.next ? `次: ${esc(p.next.label)}` : '台本まで完了';
+
+    return `<div class="proj">
+      <h3>${esc(p.title)}</h3>
+      <div class="id">${esc(p.id)}${p.kindLabel ? ' · ' + esc(p.kindLabel) : ''} · ${nextLabel}</div>
+      <div class="steps">${steps}</div>
+      ${detail}
+    </div>`;
+  }).join('');
+}
+
+$('projects').addEventListener('click', async (e) => {
+  const btn = e.target.closest('.step');
+  if (!btn) return;
+  const { project, step } = btn.dataset;
+  openStep[project] = openStep[project] === step ? null : step;
+  if (openStep[project]) {
+    const data = await api(`/api/projects/${encodeURIComponent(project)}`);
+    artifacts[project] = data.artifacts;
+  }
+  renderProjects();
+});
+
+// --- 起動 --------------------------------------------------------------------
+
+Promise.all([loadIdeas(), loadProjects()]).catch((e) => {
+  showError($('ideaError'), e.message);
+});
+</script>
+</body>
+</html>
