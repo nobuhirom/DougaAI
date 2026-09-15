@@ -20,3 +20,8 @@ renders/
 
 # OS
 .DS_Store
+
+# ビルドの派生物（docs/04_要件定義.md N3）
+build/
+out/
+public/

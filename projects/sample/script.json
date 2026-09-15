@@ -1,0 +1,267 @@
+{
+  "meta": {
+    "id": "sample",
+    "title": "台本JSONから解説動画を作る",
+    "fps": 30,
+    "width": 1920,
+    "height": 1080,
+    "characters": ["kaede", "tsumugi"]
+  },
+  "sections": [
+    {
+      "type": "introduction",
+      "name": "導入",
+      "lines": [
+        {
+          "id": "s0_intro_001",
+          "character": "tsumugi",
+          "text": "楓さん、この動画ってどうやって作ってるんですか。",
+          "emotion": "thinking"
+        },
+        {
+          "id": "s0_intro_002",
+          "character": "kaede",
+          "text": "台本のJSONを一枚書くと、この動画が出てきます。",
+          "emotion": "explain",
+          "visual": {
+            "type": "title",
+            "text": "台本JSONから動画を作る",
+            "subtitle": "編集ソフトも動画生成AIも使わない"
+          }
+        },
+        {
+          "id": "s0_intro_003",
+          "character": "tsumugi",
+          "text": "一枚で、ですか。編集ソフトは使わないんですね。",
+          "emotion": "surprised"
+        },
+        {
+          "id": "s0_intro_004",
+          "character": "kaede",
+          "text": "はい。音声も字幕も尺も、すべてそこから決まります。",
+          "emotion": "explain"
+        }
+      ]
+    },
+    {
+      "type": "main",
+      "name": "仕組み",
+      "lines": [
+        {
+          "id": "s1_main_001",
+          "character": "kaede",
+          "text": "工程は四つです。順に見ていきましょう。",
+          "emotion": "explain",
+          "visual": {
+            "type": "bullets",
+            "title": "パイプラインの四工程",
+            "items": [
+              "検証 — 機械で落とせる間違いを先に落とす",
+              "音声合成 — セリフごとにキャッシュする",
+              "尺の確定 — 音声の長さからフレーム数を決める",
+              "レンダリング — Remotionで焼く"
+            ],
+            "highlight": 0
+          }
+        },
+        {
+          "id": "s1_main_002",
+          "character": "tsumugi",
+          "text": "検証が一番先なんですね。意外でした。",
+          "emotion": "thinking"
+        },
+        {
+          "id": "s1_main_003",
+          "character": "kaede",
+          "text": "機械で落とせる間違いは、絵を描く前に落とします。",
+          "emotion": "explain"
+        },
+        {
+          "id": "s1_main_004",
+          "character": "kaede",
+          "text": "たとえば字幕がはみ出す台本は、ここで止まります。",
+          "emotion": "explain"
+        },
+        {
+          "id": "s1_main_005",
+          "character": "tsumugi",
+          "text": "レンダリングしてから気づくのは遅い、ということですか。",
+          "emotion": "normal"
+        },
+        {
+          "id": "s1_main_006",
+          "character": "kaede",
+          "text": "そうです。八種類のチェックを全部通します。",
+          "emotion": "happy"
+        },
+        {
+          "id": "s1_main_007",
+          "character": "kaede",
+          "text": "土台になる部品は、二つの候補から選びました。",
+          "emotion": "explain",
+          "visual": {
+            "type": "compare",
+            "title": "レンダリング基盤の比較",
+            "left": {
+              "title": "Remotion",
+              "items": [
+                "Reactで動画を書く",
+                "型とzodで描く前に止まる",
+                "個人利用は無償"
+              ]
+            },
+            "right": {
+              "title": "HyperFrames",
+              "items": [
+                "HTMLとCSSで動画を書く",
+                "壊れても完走することがある",
+                "Apache-2.0"
+              ]
+            }
+          }
+        },
+        {
+          "id": "s1_main_008",
+          "character": "tsumugi",
+          "text": "決め手は何だったんですか。",
+          "emotion": "thinking"
+        },
+        {
+          "id": "s1_main_009",
+          "character": "kaede",
+          "text": "壊れ方です。黙って完走してしまう方を避けました。",
+          "emotion": "explain"
+        },
+        {
+          "id": "s1_main_010",
+          "character": "tsumugi",
+          "text": "エラーで止まってくれた方が助かる、ということですね。",
+          "emotion": "normal"
+        }
+      ]
+    },
+    {
+      "type": "main",
+      "name": "音声と尺",
+      "lines": [
+        {
+          "id": "s2_main_001",
+          "character": "kaede",
+          "text": "台本のセリフは、こういう形をしています。",
+          "emotion": "explain",
+          "visual": {
+            "type": "code",
+            "language": "json",
+            "code": "{\n  \"id\": \"s2_main_001\",\n  \"character\": \"kaede\",\n  \"text\": \"台本のセリフは、こういう形をしています。\",\n  \"emotion\": \"explain\",\n  \"visual\": { \"type\": \"code\", \"language\": \"json\" }\n}",
+            "highlightLines": [4],
+            "caption": "いま読んでいるのがこの行"
+          }
+        },
+        {
+          "id": "s2_main_002",
+          "character": "tsumugi",
+          "text": "emotionというのは、表情のことですか。",
+          "emotion": "thinking"
+        },
+        {
+          "id": "s2_main_003",
+          "character": "kaede",
+          "text": "表情と、音声の感情の両方を動かします。",
+          "emotion": "explain"
+        },
+        {
+          "id": "s2_main_004",
+          "character": "kaede",
+          "text": "音声を先に作って、その長さで尺が決まります。",
+          "emotion": "explain",
+          "visual": {
+            "type": "image",
+            "src": "pipeline.png",
+            "caption": "台本から MP4 までの流れ"
+          }
+        },
+        {
+          "id": "s2_main_005",
+          "character": "tsumugi",
+          "text": "先に尺を決めてから喋らせるんじゃないんですね。",
+          "emotion": "surprised"
+        },
+        {
+          "id": "s2_main_006",
+          "character": "kaede",
+          "text": "はい。だから喋り終わる前に画面が変わりません。",
+          "emotion": "explain"
+        },
+        {
+          "id": "s2_main_007",
+          "character": "tsumugi",
+          "text": "口の動きも音に合っていますね。",
+          "emotion": "happy"
+        },
+        {
+          "id": "s2_main_008",
+          "character": "kaede",
+          "text": "音声の振幅を先に測って、数値を焼き込んであります。",
+          "emotion": "explain"
+        }
+      ]
+    },
+    {
+      "type": "summary",
+      "name": "まとめ",
+      "lines": [
+        {
+          "id": "s3_summary_001",
+          "character": "kaede",
+          "text": "まとめます。この方式の利点は三つです。",
+          "emotion": "explain",
+          "visual": {
+            "type": "bullets",
+            "title": "この方式の利点",
+            "items": [
+              "同じ台本からは必ず同じ動画が出る",
+              "一行直すと、その行の音声だけ作り直す",
+              "何本作っても料金が変わらない"
+            ],
+            "highlight": 2
+          }
+        },
+        {
+          "id": "s3_summary_002",
+          "character": "tsumugi",
+          "text": "何本作っても料金が変わらないのは大きいです。",
+          "emotion": "happy"
+        },
+        {
+          "id": "s3_summary_003",
+          "character": "kaede",
+          "text": "動画生成AIを使っていないからです。",
+          "emotion": "normal"
+        }
+      ]
+    },
+    {
+      "type": "outro",
+      "name": "おわり",
+      "lines": [
+        {
+          "id": "s4_outro_001",
+          "character": "kaede",
+          "text": "次は、台本そのものをAIに書かせます。",
+          "emotion": "explain",
+          "visual": {
+            "type": "title",
+            "text": "次は台本をAIに書かせる",
+            "subtitle": "フェーズ2"
+          }
+        },
+        {
+          "id": "s4_outro_002",
+          "character": "tsumugi",
+          "text": "楽しみですね。では、またお会いしましょう。",
+          "emotion": "happy"
+        }
+      ]
+    }
+  ]
+}
