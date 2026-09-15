@@ -9,19 +9,18 @@ node_modules/
 .env.*
 !.env.example
 
-# ビルド・生成物
+# ビルドの派生物（docs/04_要件定義.md N3）
+# public/ はビルドが生成するステージング領域で、正のアセットではない。
 dist/
 build/
 out/
+public/
 renders/
-*.mp4
-*.wav
-*.mp3
+
+# 音声・動画そのものは派生物の置き場にだけ現れる想定だが、
+# assets/ と characters/ の素材は正なので除外しない。
+/out/**/*.mp4
+/build/**/*.wav
 
 # OS
 .DS_Store
-
-# ビルドの派生物（docs/04_要件定義.md N3）
-build/
-out/
-public/

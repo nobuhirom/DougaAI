@@ -23,11 +23,67 @@ AI とプログラミングで解説動画を作るシステムを開発する�
 
 決定の根拠は [docs/03_方式決定.md](docs/03_方式決定.md) を参照。
 
+## 使い方
+
+```bash
+npm install
+npm run douga -- doctor          # 前提が揃っているか確認する
+npm run douga -- render sample   # 台本 → MP4
+```
+
+| コマンド | 内容 |
+| --- | --- |
+| `douga validate <id>` | 台本を検証する（音声は作らない） |
+| `douga build <id>` | 音声を生成してマニフェストを組む |
+| `douga render <id>` | ビルドして `out/<id>.mp4` を書き出す |
+| `douga preview <id>` | Remotion Studio を開く |
+| `douga info <id>` | ビルド済みマニフェストの要約を出す |
+| `douga doctor` | 実行環境を確認する |
+
+主なオプション: `--tts irodori|macos-say` / `--force` / `--preset draft|final` / `--concurrency <n>`
+
+公開用の音声には Irodori TTS のサーバーが要る（[docs/05_TTS導入.md](docs/05_TTS導入.md)）。
+まだ用意していない場合は `--tts macos-say` で下書きを作れる。これは公開用の音声ではない。
+
+## 台本の書き方
+
+`projects/<id>/script.json` に書く。実例は [projects/sample/script.json](projects/sample/script.json)。
+
+```jsonc
+{
+  "meta": { "id": "sample", "title": "…", "characters": ["kaede", "tsumugi"] },
+  "sections": [
+    {
+      "type": "introduction",        // introduction | main | summary | outro
+      "name": "導入",
+      "lines": [
+        {
+          "id": "s0_intro_001",      // s{セクション番号}_{種別}_{3桁連番}
+          "character": "kaede",
+          "text": "セリフ本文。字幕にそのまま出る",
+          "emotion": "explain",      // normal | explain | happy | surprised | thinking | trouble
+          "visual": { "type": "bullets", "title": "…", "items": ["…"] }
+        }
+      ]
+    }
+  ]
+}
+```
+
+- `visual` と `bgm` は省略すると**直前のセリフの状態を引き継ぐ**。消すときは `{"type":"none"}`
+- ビジュアルは6型: `none` / `title` / `bullets` / `code` / `compare` / `image`
+- 読み間違える語は `reading` で TTS 用の読みだけ上書きできる（字幕は `text` のまま）
+
+キャラクターは `characters/<id>/character.json` で定義する。
+立ち絵は画像がなくても動く（`appearance.kind: "placeholder"` が SVG で描く）。
+実素材ができたら `sprite` に切り替える。
+
 ## 状況
 
 - 2026-09-15: 先行事例の調査を実施。`docs/` に調査メモと論点を整理
 - 2026-09-15: 公式ドキュメントで裏を取り、レンダリング基盤と TTS を決定。要件定義を作成
-- 次: フェーズ1（MVP）の実装 — 「台本 JSON を書いたら動画が1本出る」
+- 2026-09-15: フェーズ1（MVP）を実装。`projects/sample` から `out/sample.mp4` が出るところまで到達
+- 次: 公開用音声（Irodori TTS）への切り替えと、フェーズ2（台本の AI 生成）
 
 ## ドキュメント
 
@@ -35,3 +91,4 @@ AI とプログラミングで解説動画を作るシステムを開発する�
 - [docs/02_論点整理.md](docs/02_論点整理.md) — 決めるべきことの一覧
 - [docs/03_方式決定.md](docs/03_方式決定.md) — レンダリング基盤と TTS の決定
 - [docs/04_要件定義.md](docs/04_要件定義.md) — スコープ・データモデル・完成の定義
+- [docs/05_TTS導入.md](docs/05_TTS導入.md) — Irodori TTS の接続と運用

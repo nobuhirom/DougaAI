@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { build, readManifest } from '../pipeline/build.js';
+import { doctor } from '../pipeline/doctor.js';
 import { DIRS, outPath } from '../pipeline/paths.js';
 import {
   ValidationError,
@@ -33,6 +34,7 @@ const USAGE = `使い方:
   render   <id>   ビルドしてから MP4 を書き出す
   preview  <id>   Remotion Studio を開く
   info     <id>   ビルド済みマニフェストの要約を表示する
+  doctor          実行環境が揃っているか確認する
 
 オプション:
   --tts <backend>   音声合成の方式（${BACKEND_IDS.join(' | ')}）。既定: irodori
@@ -201,6 +203,20 @@ async function cmdPreview(projectId: string): Promise<void> {
   ]);
 }
 
+async function cmdDoctor(): Promise<void> {
+  const results = await doctor();
+  for (const r of results) {
+    const mark = r.ok ? 'OK  ' : r.required ? 'NG  ' : '--  ';
+    process.stdout.write(`${mark} ${r.name.padEnd(14)} ${r.detail}\n`);
+  }
+  const blocking = results.filter((r) => r.required && !r.ok);
+  if (blocking.length > 0) {
+    process.stderr.write(`\n必須の項目が ${blocking.length} 件足りていない\n`);
+    process.exit(1);
+  }
+  process.stdout.write('\n必須の前提はすべて揃っている\n');
+}
+
 function cmdInfo(projectId: string): void {
   const manifest = readManifest(projectId);
   if (!manifest) {
@@ -247,6 +263,11 @@ async function main(): Promise<void> {
 
   if (values.help || !command) {
     process.stdout.write(USAGE);
+    return;
+  }
+
+  if (command === 'doctor') {
+    await cmdDoctor();
     return;
   }
 
