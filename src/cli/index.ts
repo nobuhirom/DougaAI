@@ -6,6 +6,7 @@ import { build, readManifest } from '../pipeline/build.js';
 import { doctor } from '../pipeline/doctor.js';
 import { addIdea, dropIdea, pickIdea, readInbox } from '../pipeline/ideas.js';
 import {
+  PHASES,
   nextStep,
   projectStatus,
   readIdea,
@@ -217,9 +218,11 @@ async function cmdPreview(projectId: string): Promise<void> {
 
 const STATE_MARK: Record<string, string> = {
   done: 'OK  ',
+  stale: '古  ',
   invalid: 'NG  ',
   ready: '→   ',
   blocked: '--  ',
+  unavailable: '    ',
 };
 
 const EXECUTOR_LABEL: Record<string, string> = {
@@ -281,13 +284,22 @@ function cmdStatus(projectId: string): void {
     process.stdout.write(`${projectId}\n\n`);
   }
 
-  for (const s of projectStatus(projectId)) {
-    const mark = STATE_MARK[s.state] ?? '?   ';
-    process.stdout.write(
-      `${mark}${s.step.label.padEnd(8)} ${EXECUTOR_LABEL[s.step.executor]?.padEnd(6) ?? ''} ${s.step.artifact}\n`,
-    );
-    for (const issue of s.issues) {
-      process.stdout.write(`      [${issue.code}]${issue.lineId ? ` ${issue.lineId}` : ''} ${issue.message}\n`);
+  const statuses = projectStatus(projectId);
+  for (const phase of PHASES) {
+    process.stdout.write(`[${phase.label}]\n`);
+    for (const s of statuses.filter((x) => x.step.phase === phase.id)) {
+      const mark = STATE_MARK[s.state] ?? '?   ';
+      const tail = s.state === 'unavailable'
+        ? `（未実装・フェーズ${s.step.plannedPhase ?? '?'}）`
+        : s.state === 'stale'
+          ? '（上流が変わった。作り直す）'
+          : s.step.artifact.replace('<id>', projectId);
+      process.stdout.write(
+        `  ${mark}${s.step.label.padEnd(7, '　')} ${(EXECUTOR_LABEL[s.step.executor] ?? '').padEnd(6, '　')} ${tail}\n`,
+      );
+      for (const issue of s.issues) {
+        process.stdout.write(`        [${issue.code}]${issue.lineId ? ` ${issue.lineId}` : ''} ${issue.message}\n`);
+      }
     }
   }
 }
@@ -301,7 +313,22 @@ function cmdNext(projectId: string): void {
 
   const { step, state, issues } = next;
   process.stdout.write(`次の工程: ${step.label}（${EXECUTOR_LABEL[step.executor]}）\n`);
-  process.stdout.write(`出力先:   projects/${projectId}/${step.artifact}\n`);
+  process.stdout.write(`出力先:   ${step.artifact.replace('<id>', projectId)}\n`);
+
+  if (state === 'unavailable') {
+    process.stdout.write(`\nこの工程はまだ実装していない（フェーズ${step.plannedPhase ?? '?'} で作る）。\n`);
+    return;
+  }
+
+  if (state === 'stale') {
+    process.stdout.write(`\n成果物はあるが、上流（台本など）がその後に変わっている。作り直す。\n`);
+  }
+
+  if (step.executor === 'machine') {
+    const cmd = step.id === 'audio' ? 'build' : 'render';
+    process.stdout.write(`\nこの工程は機械が行う:\n  npm run douga -- ${cmd} ${projectId}\n`);
+    return;
+  }
 
   if (state === 'blocked') {
     process.stdout.write(
@@ -333,7 +360,7 @@ function cmdCheck(projectId: string): void {
   const withIssues = statuses.filter((s) => s.issues.length > 0);
 
   for (const s of statuses) {
-    if (!s.exists) continue;
+    if (!s.exists || !s.step.implemented) continue;
     const mark = s.issues.length === 0 ? 'OK  ' : 'NG  ';
     process.stdout.write(`${mark}${s.step.label}  ${s.step.artifact}\n`);
     for (const issue of s.issues) {

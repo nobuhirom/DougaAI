@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PLAN_SECTIONS, RESEARCH_SECTIONS, STEPS, readSections } from './steps.js';
+import { PHASES, PLAN_SECTIONS, RESEARCH_SECTIONS, STEPS, readSections } from './steps.js';
 
 /**
  * 工程の検証ロジック。
@@ -63,10 +63,29 @@ describe('工程の定義', () => {
     }
   });
 
-  it('エージェントが行う工程には手順書がある', () => {
-    for (const step of STEPS.filter((s) => s.executor === 'agent')) {
+  it('実装済みでエージェントが行う工程には手順書がある', () => {
+    for (const step of STEPS.filter((s) => s.executor === 'agent' && s.implemented)) {
       expect(step.prompt, `${step.id} に手順書がない`).toBeTruthy();
     }
+  });
+
+  it('未実装の工程には、どのフェーズで作るかが書いてある', () => {
+    for (const step of STEPS.filter((s) => !s.implemented)) {
+      expect(step.plannedPhase, `${step.id} の予定フェーズがない`).toBeTruthy();
+    }
+  });
+
+  it('12工程すべてが定義されている', () => {
+    expect(STEPS).toHaveLength(12);
+    expect(STEPS.map((s) => s.id)).toEqual([
+      'idea', 'plan', 'research', 'script', 'review', 'visual',
+      'audio', 'thumbnail', 'assemble', 'shorts', 'i18n', 'publish',
+    ]);
+  });
+
+  it('各工程が5つの段階のどれかに属している', () => {
+    const phases = new Set(PHASES.map((p) => p.id));
+    for (const step of STEPS) expect(phases.has(step.phase), `${step.id} の段階が不明`).toBe(true);
   });
 
   it('成果物のパスが重複していない', () => {

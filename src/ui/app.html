@@ -6,433 +6,448 @@
 <title>DougaAI — 制作</title>
 <style>
   :root {
-    --bg: #0f1420;
-    --panel: #161d2c;
-    --panel-2: #1d263a;
-    --line: #2a3550;
-    --text: #e8edf7;
-    --muted: #8b97ae;
-    --accent: #4b8bf5;
-    --pink: #e0609a;
-    --ok: #46b97a;
-    --ng: #e0625c;
-    --warn: #d9a441;
+    --bg: #0f1420; --side: #0b0f19; --panel: #161d2c; --panel-2: #1d263a;
+    --line: #2a3550; --text: #e8edf7; --muted: #8b97ae; --accent: #4b8bf5;
+    --ok: #46b97a; --ng: #e0625c; --warn: #d9a441; --stale: #c084fc; --dim: #4a5568;
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
+    margin: 0; background: var(--bg); color: var(--text);
     font-family: "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
-    font-size: 15px;
-    line-height: 1.7;
+    font-size: 14.5px; line-height: 1.7; display: flex;
   }
-  header {
-    padding: 18px 24px;
-    border-bottom: 1px solid var(--line);
-    display: flex;
-    align-items: baseline;
-    gap: 16px;
-  }
-  header h1 { margin: 0; font-size: 19px; letter-spacing: .04em; }
-  header .sub { color: var(--muted); font-size: 13px; }
-  main {
-    display: grid;
-    grid-template-columns: minmax(360px, 1fr) minmax(420px, 1.2fr);
-    gap: 20px;
-    padding: 20px 24px 48px;
-    align-items: start;
-  }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  a { color: var(--accent); text-decoration: none; }
 
-  section { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
-  section > h2 {
-    margin: 0;
-    padding: 14px 18px;
-    font-size: 14px;
-    letter-spacing: .08em;
-    color: var(--muted);
-    border-bottom: 1px solid var(--line);
-    font-weight: 600;
+  /* --- メニュー --- */
+  nav {
+    width: 210px; flex-shrink: 0; background: var(--side);
+    border-right: 1px solid var(--line); padding: 18px 12px;
+    display: flex; flex-direction: column; gap: 4px; position: sticky; top: 0; height: 100vh;
   }
-  .body { padding: 16px 18px; }
+  nav .brand { font-size: 18px; font-weight: 700; letter-spacing: .04em; padding: 4px 10px 14px; }
+  nav a.item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; border-radius: 8px; color: var(--muted);
+  }
+  nav a.item:hover { background: var(--panel); color: var(--text); }
+  nav a.item.active { background: var(--panel-2); color: var(--text); }
+  nav .badge { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; font-size: 12px; }
+  nav a.item.active .badge { background: var(--accent); border-color: var(--accent); color: #fff; }
+  nav .foot { margin-top: auto; color: var(--dim); font-size: 12px; padding: 0 10px; line-height: 1.5; }
 
-  textarea, input[type=text], select {
-    width: 100%;
-    background: var(--panel-2);
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font: inherit;
-    resize: vertical;
-  }
-  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
-  label { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
-
-  button {
-    background: var(--accent);
-    color: #fff;
-    border: 0;
-    border-radius: 8px;
-    padding: 9px 16px;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  button:hover { filter: brightness(1.1); }
-  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 400; padding: 5px 10px; font-size: 13px; }
-  button.ghost:hover { color: var(--text); border-color: var(--accent); }
+  main { flex: 1; min-width: 0; padding: 22px 26px 60px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+  .card > h2 { margin: 0; padding: 12px 16px; font-size: 13px; letter-spacing: .08em; color: var(--muted); border-bottom: 1px solid var(--line); font-weight: 600; }
+  .body { padding: 14px 16px; }
   .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .spacer { flex: 1; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12.5px; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .cmd { font-family: ui-monospace, monospace; background: var(--panel-2); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px; font-size: 12.5px; }
+  .error { color: var(--ng); font-size: 13px; margin-top: 8px; }
+  .empty { color: var(--muted); padding: 10px 0; }
 
-  ul.ideas { list-style: none; margin: 0; padding: 0; }
-  ul.ideas li {
-    padding: 12px 0;
-    border-top: 1px solid var(--line);
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
+  textarea, input[type=text], select {
+    width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 8px; padding: 9px 12px; font: inherit; resize: vertical;
   }
+  textarea.editor { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; line-height: 1.6; min-height: 320px; }
+  textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  label { display: block; font-size: 12.5px; color: var(--muted); margin: 8px 0 4px; }
+  select { width: auto; }
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 8px 15px; font: inherit; font-weight: 600; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  button:disabled { opacity: .5; cursor: default; }
+  button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); font-weight: 400; padding: 5px 10px; font-size: 13px; }
+  button.ghost:hover { color: var(--text); border-color: var(--accent); }
+
+  /* --- 状態の色 --- */
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--dim); flex-shrink: 0; display: inline-block; }
+  .dot.done { background: var(--ok); }
+  .dot.invalid { background: var(--ng); }
+  .dot.ready { background: var(--warn); }
+  .dot.stale { background: var(--stale); }
+  .dot.blocked { background: var(--dim); }
+  .dot.unavailable { background: transparent; border: 1px dashed var(--dim); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+  /* --- ボード --- */
+  .board { display: grid; grid-template-columns: repeat(5, minmax(180px, 1fr)); gap: 12px; overflow-x: auto; }
+  .col { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; min-height: 200px; }
+  .col > h3 { margin: 0; padding: 10px 14px; font-size: 13.5px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .col > h3 > span:first-child, .col > h3 { white-space: nowrap; }
+  .col > h3 .desc { font-weight: 400; color: var(--muted); font-size: 11.5px; white-space: normal; text-align: right; }
+  .col .stepsrow { padding: 6px 14px; border-bottom: 1px dashed var(--line); font-size: 11.5px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .col .cards { padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .pcard { display: block; background: var(--panel-2); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; color: var(--text); }
+  .pcard:hover { border-color: var(--accent); }
+  .pcard .t { font-weight: 600; font-size: 14px; line-height: 1.4; }
+  .pcard .m { color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+  .pcard .dots { display: flex; gap: 4px; margin-top: 8px; }
+  .pcard .next { font-size: 12px; margin-top: 6px; }
+  .pcard .next.invalid, .pcard .next.stale { color: var(--warn); }
+  .pcard .running { color: var(--accent); font-size: 12px; }
+
+  /* --- プロジェクト --- */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 14px 0 16px; }
+  .flow .ph { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+  .flow .ph h4 { margin: 0 0 6px; font-size: 12px; color: var(--muted); letter-spacing: .06em; }
+  .flow .st {
+    display: flex; gap: 7px; align-items: center; padding: 5px 8px; border-radius: 7px; cursor: pointer;
+    border: 1px solid transparent; font-size: 13px; width: 100%; background: transparent; color: var(--text); text-align: left; font-weight: 400;
+  }
+  .flow .st:hover { background: var(--panel-2); }
+  .flow .st.selected { border-color: var(--accent); background: var(--panel-2); }
+  .flow .st.unavailable { color: var(--dim); }
+  .flow .st .ex { margin-left: auto; font-size: 10.5px; color: var(--muted); }
+  .issues { margin: 10px 0; padding: 10px 12px; background: rgba(224,98,92,.1); border: 1px solid rgba(224,98,92,.35); border-radius: 8px; font-size: 13px; }
+  .issues code { color: var(--ng); font-size: 12px; }
+  .stale-note { margin: 10px 0; padding: 10px 12px; background: rgba(192,132,252,.1); border: 1px solid rgba(192,132,252,.35); border-radius: 8px; font-size: 13px; }
+  pre.log { margin: 10px 0 0; padding: 12px; background: #0b101a; border: 1px solid var(--line); border-radius: 8px; max-height: 300px; overflow: auto; font-size: 12px; line-height: 1.5; white-space: pre-wrap; word-break: break-all; font-family: ui-monospace, monospace; }
+  video { width: 100%; max-width: 960px; border-radius: 10px; border: 1px solid var(--line); background: #000; margin-top: 12px; }
+  .hint { color: var(--muted); font-size: 13px; }
+  .hint b { color: var(--text); }
+  ul.mods { list-style: none; margin: 0; padding: 0; font-size: 12.5px; }
+  ul.mods li { padding: 5px 0; border-top: 1px solid var(--line); color: var(--muted); }
+  ul.mods li:first-child { border-top: 0; }
+
+  /* --- ネタ --- */
+  ul.ideas { list-style: none; margin: 0; padding: 0; }
+  ul.ideas li { padding: 12px 0; border-top: 1px solid var(--line); display: flex; gap: 12px; align-items: flex-start; }
   ul.ideas li:first-child { border-top: 0; }
   ul.ideas li.dropped { opacity: .45; }
   .idea-text { flex: 1; word-break: break-word; }
   .idea-meta { color: var(--muted); font-size: 12px; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap; }
   .tag { background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-size: 12px; }
-  .idea-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 1000px) { .two { grid-template-columns: 1fr; } .board { grid-template-columns: repeat(5, 220px); } .flow { grid-template-columns: 1fr 1fr; } }
 
-  .proj { border-top: 1px solid var(--line); padding: 14px 0; }
-  .proj:first-child { border-top: 0; }
-  .proj h3 { margin: 0 0 2px; font-size: 16px; }
-  .proj .id { color: var(--muted); font-size: 12px; font-family: ui-monospace, monospace; }
-  .steps { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
-  .step {
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    padding: 3px 12px;
-    font-size: 12.5px;
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    cursor: pointer;
-    background: transparent;
-    color: var(--text);
-    font-weight: 400;
-  }
-  .step .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .step.done .dot { background: var(--ok); }
-  .step.invalid .dot { background: var(--ng); }
-  .step.ready .dot { background: var(--warn); }
-  .step.blocked { opacity: .45; }
-  .step.selected { border-color: var(--accent); }
+  /* --- テーブル --- */
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12px; border-top: 0; }
+  .sw { display: inline-block; width: 14px; height: 14px; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
 
-  .issues { margin: 10px 0 0; padding: 10px 12px; background: rgba(224,98,92,.1); border: 1px solid rgba(224,98,92,.35); border-radius: 8px; font-size: 13px; }
-  .issues code { color: var(--ng); font-size: 12px; }
-
-  pre.artifact {
-    margin: 12px 0 0;
-    padding: 14px;
-    background: #0b101a;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    overflow: auto;
-    max-height: 420px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12.5px;
-    line-height: 1.6;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-  .hint { color: var(--muted); font-size: 13px; }
-  .hint code, .cmd {
-    font-family: ui-monospace, monospace;
-    background: var(--panel-2);
-    border: 1px solid var(--line);
-    border-radius: 5px;
-    padding: 1px 6px;
-    font-size: 12.5px;
-  }
-  .empty { color: var(--muted); padding: 8px 0; }
-  .error { color: var(--ng); font-size: 13px; margin-top: 8px; }
-  dialog {
-    background: var(--panel); color: var(--text);
-    border: 1px solid var(--line); border-radius: 12px;
-    padding: 20px; min-width: 340px;
-  }
+  dialog { background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 12px; padding: 20px; min-width: 360px; }
   dialog::backdrop { background: rgba(0,0,0,.6); }
 </style>
 </head>
 <body>
-<header>
-  <h1>DougaAI</h1>
-  <span class="sub">ネタ出しから台本まで。生成はエージェントが端末側で行います</span>
-</header>
-
-<main>
-  <section>
-    <h2>ネタ</h2>
-    <div class="body">
-      <textarea id="ideaText" rows="3" placeholder="気になったことをそのまま。整える必要はありません（⌘/Ctrl + Enter で追加）"></textarea>
-      <label for="ideaTags">タグ（空白区切り・任意）</label>
-      <input id="ideaTags" type="text" placeholder="remotion 日本語">
-      <div class="row" style="margin-top:12px">
-        <button id="addIdea">追加</button>
-        <span class="spacer"></span>
-        <label style="margin:0"><input type="checkbox" id="showDropped"> 見送りも表示</label>
-      </div>
-      <div id="ideaError" class="error" hidden></div>
-      <ul class="ideas" id="ideaList" style="margin-top:16px"></ul>
-    </div>
-  </section>
-
-  <section>
-    <h2>制作中</h2>
-    <div class="body" id="projects"></div>
-  </section>
-</main>
+<nav>
+  <div class="brand">DougaAI</div>
+  <a class="item" href="#/board" data-nav="board">ボード</a>
+  <a class="item" href="#/ideas" data-nav="ideas">ネタ <span class="badge" id="ideaBadge">0</span></a>
+  <a class="item" href="#/projects" data-nav="projects">プロジェクト <span class="badge" id="projBadge">0</span></a>
+  <a class="item" href="#/characters" data-nav="characters">キャラクター</a>
+  <a class="item" href="#/env" data-nav="env">環境</a>
+  <div class="foot">生成はエージェントが端末側で行います。この画面は見る・選ぶ・直す・焼く。</div>
+</nav>
+<main id="main"></main>
 
 <dialog id="pickDialog">
   <form method="dialog" id="pickForm">
     <h3 style="margin:0 0 4px">プロジェクトにする</h3>
-    <p class="hint" id="pickSource" style="margin:0 0 14px"></p>
+    <p class="hint" id="pickSource" style="margin:0 0 12px"></p>
     <label for="pickId">プロジェクト ID（英小文字・数字・ハイフン）</label>
     <input id="pickId" type="text" required pattern="[a-z0-9][a-z0-9-]*">
     <label for="pickTitle">仮タイトル（任意）</label>
     <input id="pickTitle" type="text">
     <label for="pickKind">用途</label>
-    <select id="pickKind">
+    <select id="pickKind" style="width:100%">
       <option value="explainer">解説動画（公開）</option>
       <option value="study">自分専用の学習動画</option>
       <option value="document">資料の動画化</option>
     </select>
     <div id="pickError" class="error" hidden></div>
-    <div class="row" style="margin-top:16px">
-      <button value="ok">作る</button>
-      <button type="button" class="ghost" id="pickCancel">やめる</button>
-    </div>
+    <div class="row" style="margin-top:16px"><button value="ok">作る</button><button type="button" class="ghost" id="pickCancel">やめる</button></div>
   </form>
 </dialog>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = (iso) => iso ? new Date(iso).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+const EXEC = { human: '人間', agent: 'エージェント', machine: '機械' };
+const STATE = { done: '完了', stale: '古い', invalid: '問題あり', ready: '着手できる', blocked: '待ち', unavailable: '未実装' };
 
 async function api(path, options) {
-  const res = await fetch(path, {
-    ...options,
-    headers: options?.body ? { 'content-type': 'application/json' } : undefined,
-  });
-  const data = await res.json();
+  const res = await fetch(path, { ...options, headers: options?.body ? { 'content-type': 'application/json' } : undefined });
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
   return data;
 }
 
-function showError(el, message) {
-  el.textContent = message;
-  el.hidden = !message;
+// --- ルーター --------------------------------------------------------------
+
+const state = { meta: null, sel: {}, jobPoll: null, editing: {} };
+
+function route() {
+  const hash = location.hash || '#/board';
+  const [, page, arg] = hash.split('/');
+  document.querySelectorAll('nav a.item').forEach((a) => a.classList.toggle('active', a.dataset.nav === page || (page === 'p' && a.dataset.nav === 'projects')));
+  clearInterval(state.jobPoll);
+  const main = $('main');
+  const views = { board: viewBoard, ideas: viewIdeas, projects: viewProjects, p: () => viewProject(decodeURIComponent(arg || '')), characters: viewCharacters, env: viewEnv };
+  (views[page] || viewBoard)(main).catch((e) => { main.innerHTML = `<div class="error">${esc(e.message)}</div>`; });
+  refreshBadges();
+}
+window.addEventListener('hashchange', route);
+
+async function refreshBadges() {
+  try {
+    const [ideas, projects] = await Promise.all([api('/api/ideas'), api('/api/projects')]);
+    $('ideaBadge').textContent = ideas.ideas.filter((i) => i.status === 'inbox').length;
+    $('projBadge').textContent = projects.length;
+  } catch {}
 }
 
-// --- ネタ --------------------------------------------------------------------
+function legend() {
+  return `<div class="legend">
+    <span><i class="dot done"></i>完了</span><span><i class="dot stale"></i>古い（上流が変わった）</span>
+    <span><i class="dot invalid"></i>問題あり</span><span><i class="dot ready"></i>着手できる</span>
+    <span><i class="dot blocked"></i>待ち</span><span><i class="dot unavailable"></i>未実装</span></div>`;
+}
 
-let ideas = [];
+// --- ボード ----------------------------------------------------------------
 
-async function loadIdeas() {
-  const data = await api('/api/ideas');
-  ideas = data.ideas;
-  if (data.broken.length > 0) {
-    showError($('ideaError'), `inbox.jsonl に読めない行が ${data.broken.length} 件あります`);
+async function viewBoard(main) {
+  const b = await api('/api/board');
+  const cols = b.phases.map((ph) => {
+    const steps = b.steps.filter((s) => s.phase === ph.id);
+    const cards = b.projects.filter((p) => p.phase === ph.id).map(projectCard).join('');
+    return `<div class="col">
+      <h3><span>${esc(ph.label)}</span><span class="desc">${esc(ph.description)}</span></h3>
+      <div class="stepsrow">${steps.map((s) => `<span>${esc(s.label)}${s.implemented ? '' : '<span class="muted">（未）</span>'}</span>`).join('')}</div>
+      <div class="cards">${cards || '<div class="empty small">なし</div>'}</div>
+    </div>`;
+  }).join('');
+  main.innerHTML = `<h1>ボード</h1><div class="sub">全プロジェクトが12工程のどこにいるか。カードは次にやる工程の段階に置かれます。</div>
+    ${legend()}<div style="height:12px"></div><div class="board">${cols}</div>`;
+}
+
+function projectCard(p) {
+  const dots = p.steps.map((s) => `<i class="dot ${s.state}" title="${esc(s.label)}: ${STATE[s.state]}"></i>`).join('');
+  const next = p.next ? `<div class="next ${p.next.state}">次: ${esc(p.next.label)}${p.next.state === 'invalid' ? '（問題あり）' : p.next.state === 'stale' ? '（作り直し）' : p.next.state === 'unavailable' ? '（未実装）' : ''}</div>` : '<div class="next">完了</div>';
+  return `<a class="pcard" href="#/p/${encodeURIComponent(p.id)}">
+    <div class="t">${esc(p.title)}</div>
+    <div class="m">${esc(p.id)}${p.kindLabel ? ' · ' + esc(p.kindLabel) : ''}</div>
+    <div class="dots">${dots}</div>${next}${p.running ? '<div class="running">実行中…</div>' : ''}</a>`;
+}
+
+// --- プロジェクト一覧 --------------------------------------------------------
+
+async function viewProjects(main) {
+  const ps = await api('/api/projects');
+  main.innerHTML = `<h1>プロジェクト</h1><div class="sub">${ps.length} 件</div>
+    <div class="card"><div class="body">${ps.length ? `<table><tr><th>タイトル</th><th>ID</th><th>用途</th><th>段階</th><th>次</th><th>工程</th></tr>
+    ${ps.map((p) => `<tr><td><a href="#/p/${encodeURIComponent(p.id)}">${esc(p.title)}</a></td><td class="mono small">${esc(p.id)}</td><td>${esc(p.kindLabel || '—')}</td>
+      <td>${esc(({plan:'企画',script:'台本',produce:'制作',expand:'展開',publish:'投稿'})[p.phase])}</td><td>${p.next ? esc(p.next.label) + ' <span class="muted small">' + STATE[p.next.state] + '</span>' : '完了'}</td>
+      <td>${p.steps.map((s) => `<i class="dot ${s.state}" title="${esc(s.label)}"></i>`).join(' ')}</td></tr>`).join('')}</table>` : '<div class="empty">まだありません。ネタから「企画にする」を押してください。</div>'}</div></div>`;
+}
+
+// --- プロジェクト詳細 --------------------------------------------------------
+
+async function viewProject(id) {
+  const main = $('main');
+  const [p, meta] = await Promise.all([api(`/api/projects/${encodeURIComponent(id)}`), state.meta || api('/api/meta')]);
+  state.meta = meta;
+  if (!state.sel[id]) state.sel[id] = p.next?.id || p.steps[0].id;
+  const selId = state.sel[id];
+  const cur = p.steps.find((s) => s.id === selId) || p.steps[0];
+  const phaseLabel = { plan: '企画', script: '台本', produce: '制作', expand: '展開', publish: '投稿' };
+
+  const flow = ['plan','script','produce','expand','publish'].map((ph) => `<div class="ph"><h4>${phaseLabel[ph]}</h4>
+    ${p.steps.filter((s) => s.phase === ph).map((s) => `<button class="st ${s.state} ${s.id === cur.id ? 'selected' : ''}" data-step="${s.id}">
+      <i class="dot ${s.state}"></i>${esc(s.label)}<span class="ex">${EXEC[s.executor]}</span></button>`).join('')}</div>`).join('');
+
+  main.innerHTML = `<div class="row small muted" style="margin-bottom:6px"><a href="#/board">← ボード</a></div>
+    <h1>${esc(p.title)}</h1>
+    <div class="sub">${esc(p.id)}${p.kindLabel ? ' · ' + esc(p.kindLabel) : ''}${p.text ? ' · ' + esc(p.text) : ''}</div>
+    ${legend()}<div class="flow">${flow}</div>
+    <div class="card"><h2 id="detailTitle"></h2><div class="body" id="detail"></div></div>
+    ${p.modifications.length ? `<div class="card" style="margin-top:16px"><h2>この画面からの修正履歴</h2><div class="body"><ul class="mods">${p.modifications.slice().reverse().map((m) => `<li>${fmt(m.at)} · ${esc(m.step)} · ${esc(m.category)}${m.note ? ' · ' + esc(m.note) : ''} <span class="mono">${m.bytesBefore}→${m.bytesAfter}B</span></li>`).join('')}</ul></div></div>` : ''}`;
+
+  main.querySelectorAll('.st').forEach((b) => b.addEventListener('click', () => { state.sel[id] = b.dataset.step; viewProject(id); }));
+  renderDetail(p, cur);
+}
+
+function renderDetail(p, s) {
+  $('detailTitle').textContent = `${s.label} — ${STATE[s.state]}${s.updatedAt ? ' · ' + fmt(s.updatedAt) : ''}`;
+  const d = $('detail');
+  let html = '';
+
+  if (s.issues.length) html += `<div class="issues">${s.issues.map((i) => `<div><code>${esc(i.code)}</code> ${i.lineId ? esc(i.lineId) + ' ' : ''}${esc(i.message)}</div>`).join('')}</div>`;
+  if (s.state === 'stale') html += `<div class="stale-note">上流の成果物がこれより後に変わっています。作り直してください。</div>`;
+
+  if (!s.implemented) {
+    html += `<p class="hint">この工程は<b>まだ実装していません</b>（フェーズ${s.plannedPhase} で作る予定。<span class="cmd">docs/06_全体計画.md</span>）。成果物の予定地: <span class="cmd">${esc(s.artifact)}</span></p>`;
+    d.innerHTML = html; return;
   }
-  renderIdeas();
-}
 
-function renderIdeas() {
-  const showDropped = $('showDropped').checked;
-  const list = ideas.filter((i) => showDropped || i.status !== 'dropped');
-  const ul = $('ideaList');
-
-  if (list.length === 0) {
-    ul.innerHTML = '<li class="empty">まだネタがありません。上に書いて追加してください。</li>';
+  if (s.executor === 'machine') {
+    html += machineForm(p, s);
+    d.innerHTML = html;
+    bindMachine(p, s);
     return;
   }
 
-  ul.innerHTML = list.map((i) => {
-    const tags = i.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join(' ');
+  // 人間・エージェントの工程
+  const content = p.artifacts[s.id];
+  if (content === null || content === undefined) {
+    html += s.prompt
+      ? `<p class="hint">この工程は<b>エージェント</b>が行います。手順書 <span class="cmd">prompts/${esc(s.prompt)}</span> と入力の成果物を読ませて <span class="cmd">${esc(s.artifact)}</span> を書かせてください。<br>端末: <span class="cmd">npm run douga -- next ${esc(p.id)}</span></p>`
+      : `<p class="hint">この工程は<b>人間</b>が行います。<span class="cmd">${esc(s.artifact)}</span> を作ってください。</p>`;
+    d.innerHTML = html; return;
+  }
+
+  html += `<div class="row small muted"><span class="cmd">${esc(s.artifact)}</span>${s.prompt ? `<span>手順書: <span class="cmd">prompts/${esc(s.prompt)}</span></span>` : ''}</div>
+    <textarea class="editor" id="editor">${esc(content)}</textarea>
+    <div class="row" style="margin-top:10px">
+      <select id="modCat">${state.meta.categories.map((c) => `<option value="${c}">${c}</option>`).join('')}</select>
+      <input type="text" id="modNote" placeholder="何を直したか（任意・改善ループの材料になります）" style="flex:1;min-width:240px">
+      <button id="saveBtn">保存して検証</button>
+    </div><div id="saveMsg" class="small muted" style="margin-top:6px"></div>`;
+  d.innerHTML = html;
+  $('saveBtn').addEventListener('click', async () => {
+    $('saveBtn').disabled = true;
+    try {
+      await api(`/api/projects/${encodeURIComponent(p.id)}/artifacts/${s.id}`, { method: 'PUT', body: JSON.stringify({ content: $('editor').value, category: $('modCat').value, note: $('modNote').value }) });
+      $('saveMsg').textContent = '保存しました';
+      await viewProject(p.id);
+    } catch (e) { $('saveMsg').innerHTML = `<span class="error">${esc(e.message)}</span>`; $('saveBtn').disabled = false; }
+  });
+}
+
+function machineForm(p, s) {
+  const kind = s.id === 'audio' ? 'build' : 'render';
+  const tts = state.meta.ttsBackends.map((b) => `<option value="${b}" ${b === 'macos-say' ? '' : 'selected'}>${b}${b === 'macos-say' ? '（下書き用・公開には使わない）' : '（公開用）'}</option>`).join('');
+  let html = `<p class="hint">${s.id === 'audio' ? '台本の各セリフを音声にし、尺を確定してマニフェストを組みます。変更のない行はキャッシュから使います。' : 'マニフェストから MP4 を焼きます。'}</p>
+    <div class="row"><label style="margin:0">TTS</label><select id="tts">${tts}</select>
+    ${kind === 'render' ? `<label style="margin:0 0 0 10px">画質</label><select id="preset"><option value="final">final（公開用）</option><option value="draft">draft（確認用・半分の解像度）</option></select>` : ''}
+    <button id="runBtn" ${p.running ? 'disabled' : ''}>${s.id === 'audio' ? '音声を作る' : '動画にする'}</button></div>
+    <div id="jobArea"></div>`;
+  if (s.id === 'assemble' && s.exists) {
+    html += `<video controls preload="metadata" src="/media/out/${encodeURIComponent(p.id)}.mp4?t=${Date.now()}"></video>
+      <div class="small muted" style="margin-top:6px">${esc(s.artifact)}${s.state === 'stale' ? '（古い。マニフェストが更新されています）' : ''}</div>`;
+  }
+  return html;
+}
+
+function bindMachine(p, s) {
+  const kind = s.id === 'audio' ? 'build' : 'render';
+  const area = $('jobArea');
+  const showJob = (job) => {
+    area.innerHTML = `<div class="small" style="margin-top:10px">${job.status === 'running' ? '<span style="color:var(--accent)">実行中…</span>' : job.status === 'done' ? '<span style="color:var(--ok)">完了</span>' : '<span style="color:var(--ng)">失敗（終了コード ' + job.exitCode + '）</span>'} <span class="muted mono">${esc(job.args.slice(2).join(' '))}</span></div>
+      <pre class="log">${esc(job.log.join('\n'))}</pre>`;
+    const pre = area.querySelector('pre'); if (pre) pre.scrollTop = pre.scrollHeight;
+  };
+  const poll = (jobId) => {
+    clearInterval(state.jobPoll);
+    state.jobPoll = setInterval(async () => {
+      try {
+        const job = await api(`/api/jobs/${jobId}`);
+        showJob(job);
+        if (job.status !== 'running') { clearInterval(state.jobPoll); await viewProject(p.id); }
+      } catch (e) { clearInterval(state.jobPoll); area.innerHTML = `<div class="error">${esc(e.message)}</div>`; }
+    }, 1200);
+  };
+  if (p.running) { poll(p.running); }
+  $('runBtn').addEventListener('click', async () => {
+    $('runBtn').disabled = true;
+    try {
+      const job = await api(`/api/projects/${encodeURIComponent(p.id)}/jobs`, { method: 'POST', body: JSON.stringify({ kind, tts: $('tts').value, preset: $('preset')?.value || 'final' }) });
+      showJob(job); poll(job.id);
+    } catch (e) { area.innerHTML = `<div class="error">${esc(e.message)}</div>`; $('runBtn').disabled = false; }
+  });
+}
+
+// --- ネタ ------------------------------------------------------------------
+
+let ideas = [];
+async function viewIdeas(main) {
+  main.innerHTML = `<h1>ネタ</h1><div class="sub">気になったことをそのまま。起点は人間です。整えるのは企画メモの工程で行います。</div>
+    <div class="two"><div class="card"><h2>書き捨てる</h2><div class="body">
+      <textarea id="ideaText" rows="4" placeholder="思いついたことをそのまま（⌘/Ctrl + Enter で追加）"></textarea>
+      <label for="ideaTags">タグ（空白区切り・任意）</label><input id="ideaTags" type="text" placeholder="remotion 日本語">
+      <div class="row" style="margin-top:12px"><button id="addIdea">追加</button><span class="spacer"></span><label style="margin:0"><input type="checkbox" id="showDropped"> 見送りも表示</label></div>
+      <div id="ideaError" class="error" hidden></div></div></div>
+    <div class="card"><h2>一覧</h2><div class="body"><ul class="ideas" id="ideaList"></ul></div></div></div>`;
+  $('addIdea').addEventListener('click', addIdeaFromForm);
+  $('ideaText').addEventListener('keydown', (e) => { if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') addIdeaFromForm(); });
+  $('showDropped').addEventListener('change', renderIdeas);
+  $('ideaList').addEventListener('click', onIdeaClick);
+  await loadIdeas();
+}
+async function loadIdeas() {
+  const data = await api('/api/ideas'); ideas = data.ideas;
+  if (data.broken.length) showErr($('ideaError'), `inbox.jsonl に読めない行が ${data.broken.length} 件あります`);
+  renderIdeas(); refreshBadges();
+}
+function showErr(el, msg) { el.textContent = msg; el.hidden = !msg; }
+function renderIdeas() {
+  const list = ideas.filter((i) => $('showDropped').checked || i.status !== 'dropped');
+  $('ideaList').innerHTML = list.length ? list.slice().reverse().map((i) => {
     const meta = [];
-    if (i.status === 'picked') meta.push(`→ projects/${esc(i.projectId)}`);
+    if (i.status === 'picked') meta.push(`→ <a href="#/p/${encodeURIComponent(i.projectId)}">projects/${esc(i.projectId)}</a>`);
     if (i.status === 'dropped') meta.push(`見送り${i.reason ? '：' + esc(i.reason) : ''}`);
-    meta.push(new Date(i.createdAt).toLocaleString('ja-JP'));
-
-    const actions = i.status === 'inbox'
-      ? `<button class="ghost" data-pick="${esc(i.id)}">企画にする</button>
-         <button class="ghost" data-drop="${esc(i.id)}">見送る</button>`
-      : i.status === 'dropped'
-        ? `<button class="ghost" data-restore="${esc(i.id)}">戻す</button>`
-        : '';
-
-    return `<li class="${i.status}">
-      <div class="idea-text">
-        ${esc(i.text)}
-        <div class="idea-meta">${tags}${meta.map((m) => `<span>${m}</span>`).join('')}</div>
-      </div>
-      <div class="idea-actions">${actions}</div>
-    </li>`;
-  }).join('');
+    meta.push(fmt(i.createdAt));
+    const actions = i.status === 'inbox' ? `<button class="ghost" data-pick="${esc(i.id)}">企画にする</button><button class="ghost" data-drop="${esc(i.id)}">見送る</button>`
+      : i.status === 'dropped' ? `<button class="ghost" data-restore="${esc(i.id)}">戻す</button>` : '';
+    return `<li class="${i.status}"><div class="idea-text">${esc(i.text)}<div class="idea-meta">${i.tags.map((t) => `<span class="tag">${esc(t)}</span>`).join('')}${meta.map((m) => `<span>${m}</span>`).join('')}</div></div><div class="row" style="flex-shrink:0">${actions}</div></li>`;
+  }).join('') : '<li class="empty">まだネタがありません。</li>';
 }
-
-$('addIdea').addEventListener('click', async () => {
-  const text = $('ideaText').value.trim();
-  if (!text) return;
-  const tags = $('ideaTags').value.split(/\s+/).filter(Boolean);
+async function addIdeaFromForm() {
+  const text = $('ideaText').value.trim(); if (!text) return;
+  try { await api('/api/ideas', { method: 'POST', body: JSON.stringify({ text, tags: $('ideaTags').value.split(/\s+/).filter(Boolean) }) }); $('ideaText').value = ''; $('ideaTags').value = ''; showErr($('ideaError'), ''); await loadIdeas(); }
+  catch (e) { showErr($('ideaError'), e.message); }
+}
+async function onIdeaClick(e) {
+  const { drop, restore, pick } = e.target.dataset || {};
   try {
-    await api('/api/ideas', { method: 'POST', body: JSON.stringify({ text, tags }) });
-    $('ideaText').value = '';
-    $('ideaTags').value = '';
-    showError($('ideaError'), '');
-    await loadIdeas();
-  } catch (e) {
-    showError($('ideaError'), e.message);
-  }
-});
-
-$('ideaText').addEventListener('keydown', (e) => {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') $('addIdea').click();
-});
-
-$('showDropped').addEventListener('change', renderIdeas);
-
-$('ideaList').addEventListener('click', async (e) => {
-  const drop = e.target.dataset?.drop;
-  const restore = e.target.dataset?.restore;
-  const pick = e.target.dataset?.pick;
-  try {
-    if (drop) {
-      const reason = prompt('見送る理由（任意）') ?? '';
-      await api(`/api/ideas/${encodeURIComponent(drop)}/drop`, {
-        method: 'POST', body: JSON.stringify({ reason }),
-      });
-      await loadIdeas();
-    } else if (restore) {
-      await api(`/api/ideas/${encodeURIComponent(restore)}/restore`, { method: 'POST' });
-      await loadIdeas();
-    } else if (pick) {
-      openPick(pick);
-    }
-  } catch (err) {
-    showError($('ideaError'), err.message);
-  }
-});
-
-// --- 企画にする --------------------------------------------------------------
-
+    if (drop) { await api(`/api/ideas/${encodeURIComponent(drop)}/drop`, { method: 'POST', body: JSON.stringify({ reason: prompt('見送る理由（任意）') ?? '' }) }); await loadIdeas(); }
+    else if (restore) { await api(`/api/ideas/${encodeURIComponent(restore)}/restore`, { method: 'POST' }); await loadIdeas(); }
+    else if (pick) openPick(pick);
+  } catch (err) { showErr($('ideaError'), err.message); }
+}
 let pickingId = null;
-
 function openPick(id) {
-  const idea = ideas.find((i) => i.id === id);
-  pickingId = id;
-  $('pickSource').textContent = idea ? idea.text : '';
-  $('pickId').value = '';
-  $('pickTitle').value = idea ? idea.text.slice(0, 40) : '';
-  showError($('pickError'), '');
-  $('pickDialog').showModal();
+  const idea = ideas.find((i) => i.id === id); pickingId = id;
+  $('pickSource').textContent = idea?.text || ''; $('pickId').value = ''; $('pickTitle').value = idea ? idea.text.slice(0, 40) : '';
+  showErr($('pickError'), ''); $('pickDialog').showModal();
 }
-
 $('pickCancel').addEventListener('click', () => $('pickDialog').close());
-
 $('pickForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   try {
-    await api(`/api/ideas/${encodeURIComponent(pickingId)}/pick`, {
-      method: 'POST',
-      body: JSON.stringify({
-        projectId: $('pickId').value.trim(),
-        title: $('pickTitle').value.trim(),
-        kind: $('pickKind').value,
-      }),
-    });
-    $('pickDialog').close();
-    await Promise.all([loadIdeas(), loadProjects()]);
-  } catch (err) {
-    showError($('pickError'), err.message);
-  }
+    const r = await api(`/api/ideas/${encodeURIComponent(pickingId)}/pick`, { method: 'POST', body: JSON.stringify({ projectId: $('pickId').value.trim(), title: $('pickTitle').value.trim(), kind: $('pickKind').value }) });
+    $('pickDialog').close(); location.hash = `#/p/${encodeURIComponent(r.id)}`;
+  } catch (err) { showErr($('pickError'), err.message); }
 });
 
-// --- プロジェクト ------------------------------------------------------------
+// --- キャラクター / 環境 ------------------------------------------------------
 
-let projects = [];
-let openStep = {};   // projectId -> stepId
-let artifacts = {};  // projectId -> { stepId: content }
-
-async function loadProjects() {
-  projects = await api('/api/projects');
-  renderProjects();
+async function viewCharacters(main) {
+  const cs = await api('/api/characters');
+  main.innerHTML = `<h1>キャラクター</h1><div class="sub">定義は <span class="cmd">characters/&lt;id&gt;/character.json</span>。立ち絵は placeholder（SVG）か sprite（画像）。</div>
+    <div class="card"><div class="body">${cs.length ? `<table><tr><th>表示名</th><th>ID</th><th>位置</th><th>立ち絵</th><th>声</th><th>persona</th></tr>${cs.map((c) => c.config ? `<tr>
+      <td><span class="sw" style="background:${esc(c.config.color)}"></span>${esc(c.config.displayName)}</td><td class="mono small">${esc(c.id)}</td><td>${c.config.position === 'left' ? '左' : '右'}</td>
+      <td>${c.config.appearance.kind === 'placeholder' ? `placeholder（hue ${c.config.appearance.hue} / ${c.config.appearance.hair}）` : 'sprite'}</td>
+      <td class="small">${c.config.voice.referenceAudio ? '参照音声: ' + esc(c.config.voice.referenceAudio) : c.config.voice.caption ? 'VoiceDesign: ' + esc(c.config.voice.caption) : '—'}<br><span class="muted">下書き: ${esc(c.config.voice.systemVoice)} / 速度 ${c.config.voice.speed}</span></td>
+      <td>${c.hasPersona ? 'あり' : '<span class="muted">なし</span>'}</td></tr>` : `<tr><td colspan="6" class="error">${esc(c.id)}: ${esc(c.error)}</td></tr>`).join('')}</table>` : '<div class="empty">characters/ に定義がありません。</div>'}</div></div>`;
+}
+async function viewEnv(main) {
+  main.innerHTML = `<h1>環境</h1><div class="sub">読み込み中…</div>`;
+  const rs = await api('/api/doctor');
+  main.innerHTML = `<h1>環境</h1><div class="sub"><span class="cmd">npm run douga -- doctor</span> と同じ内容。</div>
+    <div class="card"><div class="body"><table><tr><th></th><th>項目</th><th>状態</th></tr>${rs.map((r) => `<tr><td><i class="dot ${r.ok ? 'done' : r.required ? 'invalid' : 'blocked'}"></i></td><td>${esc(r.name)}</td><td class="small">${esc(r.detail)}</td></tr>`).join('')}</table></div></div>`;
 }
 
-const EXECUTOR = { human: '人間', agent: 'エージェント', machine: '機械' };
-
-function renderProjects() {
-  const el = $('projects');
-  if (projects.length === 0) {
-    el.innerHTML = '<div class="empty">まだありません。左のネタから「企画にする」を押してください。</div>';
-    return;
-  }
-
-  el.innerHTML = projects.map((p) => {
-    const steps = p.steps.map((s) => `
-      <button class="step ${s.state} ${openStep[p.id] === s.id ? 'selected' : ''}"
-              data-project="${esc(p.id)}" data-step="${esc(s.id)}">
-        <span class="dot"></span>${esc(s.label)}
-      </button>`).join('');
-
-    const current = p.steps.find((s) => s.id === openStep[p.id]);
-    let detail = '';
-
-    if (current) {
-      if (current.issues.length > 0) {
-        detail += `<div class="issues">${current.issues.map((i) =>
-          `<div><code>${esc(i.code)}</code> ${i.lineId ? esc(i.lineId) + ' ' : ''}${esc(i.message)}</div>`
-        ).join('')}</div>`;
-      }
-      const content = artifacts[p.id]?.[current.id];
-      if (content) {
-        detail += `<pre class="artifact">${esc(content)}</pre>`;
-      } else if (!current.exists) {
-        const how = current.prompt
-          ? `この工程は<b>エージェント</b>が行います。手順書 <span class="cmd">prompts/${esc(current.prompt)}</span> を読ませて
-             <span class="cmd">projects/${esc(p.id)}/${esc(current.artifact)}</span> を書かせてください。`
-          : 'この工程は<b>人間</b>が行います。';
-        detail += `<p class="hint" style="margin-top:12px">${how}<br>
-          端末で <span class="cmd">npm run douga -- next ${esc(p.id)}</span> を実行すると、同じ案内が出ます。</p>`;
-      }
-    }
-
-    const nextLabel = p.next ? `次: ${esc(p.next.label)}` : '台本まで完了';
-
-    return `<div class="proj">
-      <h3>${esc(p.title)}</h3>
-      <div class="id">${esc(p.id)}${p.kindLabel ? ' · ' + esc(p.kindLabel) : ''} · ${nextLabel}</div>
-      <div class="steps">${steps}</div>
-      ${detail}
-    </div>`;
-  }).join('');
-}
-
-$('projects').addEventListener('click', async (e) => {
-  const btn = e.target.closest('.step');
-  if (!btn) return;
-  const { project, step } = btn.dataset;
-  openStep[project] = openStep[project] === step ? null : step;
-  if (openStep[project]) {
-    const data = await api(`/api/projects/${encodeURIComponent(project)}`);
-    artifacts[project] = data.artifacts;
-  }
-  renderProjects();
-});
-
-// --- 起動 --------------------------------------------------------------------
-
-Promise.all([loadIdeas(), loadProjects()]).catch((e) => {
-  showError($('ideaError'), e.message);
-});
+route();
 </script>
 </body>
 </html>
