@@ -26,6 +26,19 @@ export const PANEL = {
   padding: 52,
 } as const;
 
+/**
+ * 紙芝居形式（format: kamishibai）のパネル。立ち絵を出さないので、幅いっぱいに使う。
+ * 字幕帯の上端（SUBTITLE.y）まで伸ばし、スライドを主役にする。
+ */
+export const PANEL_KAMISHIBAI = {
+  x: 120,
+  y: 56,
+  width: 1680,
+  height: 740,
+  radius: 28,
+  padding: 60,
+} as const;
+
 /** セクション名の札。パネルの上、立ち絵の外側に置く。 */
 export const SECTION_CHIP = {
   x: PANEL.x,

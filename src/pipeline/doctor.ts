@@ -5,6 +5,7 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 import { DIRS } from './paths.js';
 import { BACKEND_IDS, type BackendId } from './tts.js';
+import { readVoiceLibrary, validateVoiceLibrary } from './voices.js';
 
 const execFileAsync = promisify(execFile);
 const require = createRequire(import.meta.url);
@@ -71,7 +72,7 @@ function checkFonts(): CheckResult {
  * 実際に build するときは --tts irodori を選んだ時点で失敗する。
  */
 async function checkIrodori(): Promise<CheckResult> {
-  const baseUrl = process.env.IRODORI_BASE_URL ?? 'http://127.0.0.1:8000/v1';
+  const baseUrl = process.env.IRODORI_BASE_URL ?? 'http://127.0.0.1:8088/v1';
   try {
     const response = await fetch(`${baseUrl}/models`, {
       signal: AbortSignal.timeout(3000),
@@ -133,6 +134,18 @@ async function checkSay(): Promise<CheckResult> {
   }
 }
 
+function checkVoices(): CheckResult {
+  const issues = validateVoiceLibrary();
+  let count = 0;
+  try { count = readVoiceLibrary().voices.length; } catch { /* issues に出る */ }
+  return {
+    name: '声のライブラリ',
+    ok: issues.length === 0 && count > 0,
+    detail: issues.length > 0 ? issues.map((i) => i.message).join(' / ') : count > 0 ? `${count} 声（voices/library.json）` : 'voices/library.json に声がない',
+    required: false,
+  };
+}
+
 function checkProjects(): CheckResult {
   const projects = fs.existsSync(DIRS.projects)
     ? fs
@@ -170,6 +183,7 @@ export async function doctor(): Promise<CheckResult[]> {
     checkFonts(),
     await checkIrodori(),
     await checkSay(),
+    checkVoices(),
     checkCharacters(),
     checkProjects(),
   ];

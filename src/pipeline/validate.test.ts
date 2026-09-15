@@ -17,7 +17,8 @@ const kaede: Character = characterSchema.parse({
   color: '#2f6feb',
   position: 'left',
   appearance: { kind: 'placeholder', hue: 212, hair: 'long' },
-  voice: { speed: 1 },
+  // voices/library.json に登録済みの id を使う
+  voice: { id: 'kaede' },
 });
 
 const tsumugi: Character = characterSchema.parse({
@@ -26,7 +27,7 @@ const tsumugi: Character = characterSchema.parse({
   color: '#d9457f',
   position: 'right',
   appearance: { kind: 'placeholder', hue: 338, hair: 'bob' },
-  voice: { speed: 1 },
+  voice: { id: 'tsumugi' },
 });
 
 const characters = { kaede, tsumugi };
@@ -78,6 +79,12 @@ describe('validateScript', () => {
     const script = baseScript();
     script.sections[0]!.lines[0]!.id = 's0_main_001';
     expect(codes(script)).toContain('id-type-mismatch');
+  });
+
+  it('ライブラリにない声を参照するキャラクターを検出する', () => {
+    const broken = { ...kaede, voice: { ...kaede.voice, id: 'no-such-voice' } };
+    const issues = validateScript(baseScript(), { kaede: broken, tsumugi });
+    expect(issues.map((i) => i.code)).toContain('unknown-voice');
   });
 
   it('meta.characters にない話者を検出する', () => {

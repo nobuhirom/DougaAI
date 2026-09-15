@@ -11,6 +11,7 @@ import {
 } from '../schema/script.js';
 import { MAX_LINES, MAX_LINE_WIDTH_EM, wrapSubtitle } from '../layout/subtitle.js';
 import { DIRS, characterConfigPath, projectAssetsDir, scriptPath } from './paths.js';
+import { validateVoiceLibrary, voiceById } from './voices.js';
 
 /**
  * レンダリング前の機械的チェック（docs/04_要件定義.md 7章）。
@@ -212,6 +213,17 @@ export function validateScript(
           });
         }
       }
+    }
+  }
+
+  // --- 4. 声の参照（ライブラリに登録されているか）---
+  issues.push(...validateVoiceLibrary());
+  for (const [characterId, character] of Object.entries(characters)) {
+    if (!voiceById(character.voice.id)) {
+      issues.push({
+        code: 'unknown-voice',
+        message: `characters/${characterId} の voice.id "${character.voice.id}" が voices/library.json にない`,
+      });
     }
   }
 

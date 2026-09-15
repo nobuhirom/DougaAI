@@ -437,7 +437,7 @@ async function viewCharacters(main) {
     <div class="card"><div class="body">${cs.length ? `<table><tr><th>表示名</th><th>ID</th><th>位置</th><th>立ち絵</th><th>声</th><th>persona</th></tr>${cs.map((c) => c.config ? `<tr>
       <td><span class="sw" style="background:${esc(c.config.color)}"></span>${esc(c.config.displayName)}</td><td class="mono small">${esc(c.id)}</td><td>${c.config.position === 'left' ? '左' : '右'}</td>
       <td>${c.config.appearance.kind === 'placeholder' ? `placeholder（hue ${c.config.appearance.hue} / ${c.config.appearance.hair}）` : 'sprite'}</td>
-      <td class="small">${c.config.voice.referenceAudio ? '参照音声: ' + esc(c.config.voice.referenceAudio) : c.config.voice.caption ? 'VoiceDesign: ' + esc(c.config.voice.caption) : '—'}<br><span class="muted">下書き: ${esc(c.config.voice.systemVoice)} / 速度 ${c.config.voice.speed}</span></td>
+      <td class="small">声: <span class="cmd">${esc(c.config.voice.id)}</span>${c.config.voice.speed ? ' × ' + c.config.voice.speed : ''}<br><span class="muted">下書き: ${esc(c.config.voice.systemVoice)}</span></td>
       <td>${c.hasPersona ? 'あり' : '<span class="muted">なし</span>'}</td></tr>` : `<tr><td colspan="6" class="error">${esc(c.id)}: ${esc(c.error)}</td></tr>`).join('')}</table>` : '<div class="empty">characters/ に定義がありません。</div>'}</div></div>`;
 }
 async function viewEnv(main) {

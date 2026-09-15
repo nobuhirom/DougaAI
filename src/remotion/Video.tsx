@@ -5,7 +5,7 @@ import type { Manifest, ManifestLine } from '../schema/manifest.js';
 import { CharacterView } from './components/Character.js';
 import { Subtitle } from './components/Subtitle.js';
 import { FONT_FAMILY, useLoadFonts } from './Fonts.js';
-import { BGM_VOLUME, COLORS, SECTION_CHIP, VOICE_VOLUME } from './theme.js';
+import { BGM_VOLUME, COLORS, PANEL_KAMISHIBAI, SECTION_CHIP, VOICE_VOLUME } from './theme.js';
 import { VisualView } from './visuals/index.js';
 
 /**
@@ -64,13 +64,15 @@ function Background() {
   );
 }
 
-function SectionChip({ label }: { label: string }) {
+function SectionChip({ label, kamishibai }: { label: string; kamishibai: boolean }) {
+  // 紙芝居はパネルが上に伸びるので、札は右上の余白へ逃がす
   return (
     <div
       style={{
         position: 'absolute',
-        left: SECTION_CHIP.x,
-        top: SECTION_CHIP.y,
+        left: kamishibai ? undefined : SECTION_CHIP.x,
+        right: kamishibai ? PANEL_KAMISHIBAI.x : undefined,
+        top: kamishibai ? 8 : SECTION_CHIP.y,
         height: SECTION_CHIP.height,
         display: 'flex',
         alignItems: 'center',
@@ -101,9 +103,11 @@ function Foreground({ manifest }: { manifest: Manifest }) {
   const character = manifest.characters[line.character];
   if (!character) return null;
 
+  const kamishibai = manifest.meta.format === 'kamishibai';
+
   return (
     <>
-      {manifest.meta.characters.map((id) => {
+      {kamishibai ? null : manifest.meta.characters.map((id) => {
         const c = manifest.characters[id];
         if (!c) return null;
         const isSpeaker = id === line.character;
@@ -117,8 +121,8 @@ function Foreground({ manifest }: { manifest: Manifest }) {
           />
         );
       })}
-      <SectionChip label={line.sectionName} />
-      <Subtitle lines={line.subtitleLines} character={character} />
+      <SectionChip label={line.sectionName} kamishibai={kamishibai} />
+      <Subtitle lines={line.subtitleLines} character={character} showName={!kamishibai} />
     </>
   );
 }
@@ -172,7 +176,7 @@ function VideoBody({ manifest }: { manifest: Manifest }) {
           from={segment.from}
           durationInFrames={segment.durationInFrames}
         >
-          <VisualView visual={segment.value} projectId={manifest.meta.id} />
+          <VisualView visual={segment.value} projectId={manifest.meta.id} format={manifest.meta.format} />
         </Sequence>
       ))}
 

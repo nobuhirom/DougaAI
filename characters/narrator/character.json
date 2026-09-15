@@ -1,0 +1,8 @@
+{
+  "id": "narrator",
+  "displayName": "ナレーション",
+  "color": "#4b8bf5",
+  "position": "left",
+  "appearance": { "kind": "placeholder", "hue": 210, "hair": "short" },
+  "voice": { "id": "announcer-f", "systemVoice": "Kyoko" }
+}

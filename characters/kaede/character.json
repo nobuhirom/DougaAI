@@ -9,8 +9,7 @@
     "hair": "long"
   },
   "voice": {
-    "caption": "落ち着いた、少し低めの女性話者。説明を淡々と進める",
-    "speed": 1,
+    "id": "kaede",
     "systemVoice": "Kyoko"
   }
 }

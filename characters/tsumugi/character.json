@@ -9,8 +9,7 @@
     "hair": "bob"
   },
   "voice": {
-    "caption": "明るく高めの女性話者。テンポよく相槌を打つ",
-    "speed": 1.05,
+    "id": "tsumugi",
     "systemVoice": "Sandy (日本語（日本）)"
   }
 }

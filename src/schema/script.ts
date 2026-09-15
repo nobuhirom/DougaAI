@@ -134,9 +134,19 @@ export type Section = z.infer<typeof sectionSchema>;
 
 // --- メタ情報 ----------------------------------------------------------------
 
+/**
+ * 動画の形式。
+ * dialogue   キャラクターの掛け合い。立ち絵が出る
+ * kamishibai 紙芝居。スライドを大きく見せ、ナレーションだけ。立ち絵は出さない
+ * どちらも台本の構造は同じ。紙芝居では character がナレーターの声を指す。
+ */
+export const FORMATS = ['dialogue', 'kamishibai'] as const;
+export type Format = (typeof FORMATS)[number];
+
 export const metaSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/, 'id は英小文字・数字・ハイフン'),
   title: z.string().min(1),
+  format: z.enum(FORMATS).default('dialogue'),
   fps: z.number().int().positive().default(30),
   width: z.number().int().positive().default(1920),
   height: z.number().int().positive().default(1080),

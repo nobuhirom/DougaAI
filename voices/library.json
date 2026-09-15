@@ -1,0 +1,40 @@
+{
+  "voices": [
+    {
+      "id": "kaede",
+      "label": "楓（説明役）",
+      "style": "character",
+      "caption": "落ち着いた、少し低めの女性話者。淡々と、しかし温かみのある説明口調",
+      "speed": 1.0,
+      "seed": 42,
+      "notes": "参照音声なし。キャプションのみ。権利のクリアな参照音声が用意できたら voices/kaede.wav を置いて reference を設定する"
+    },
+    {
+      "id": "tsumugi",
+      "label": "紬（聞き役）",
+      "style": "character",
+      "caption": "明るく高めの女性話者。テンポよく、好奇心のある相槌",
+      "speed": 1.05,
+      "seed": 42,
+      "notes": "参照音声なし。キャプションのみ"
+    },
+    {
+      "id": "announcer-f",
+      "label": "アナウンサー（女性）",
+      "style": "announcer",
+      "caption": "ニュース番組のアナウンサーのような、明瞭で落ち着いた標準的な女性の読み上げ。感情を抑え、聞き取りやすい",
+      "speed": 1.0,
+      "seed": 42,
+      "notes": "紙芝居形式のナレーション向け"
+    },
+    {
+      "id": "announcer-m",
+      "label": "アナウンサー（男性）",
+      "style": "announcer",
+      "caption": "落ち着いた低めの男性ナレーター。明瞭で誠実、ドキュメンタリー番組のナレーションのような読み上げ",
+      "speed": 1.0,
+      "seed": 42,
+      "notes": "紙芝居形式のナレーション向け"
+    }
+  ]
+}

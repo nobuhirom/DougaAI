@@ -20,6 +20,8 @@ export const DIRS = {
   bgm: path.join(ROOT, 'assets', 'bgm'),
   characters: path.join(ROOT, 'characters'),
   projects: path.join(ROOT, 'projects'),
+  /** 声のライブラリ。Irodori-TTS-Server の IRODORI_VOICES_DIR もここを指す。 */
+  voices: path.join(ROOT, 'voices'),
   /** ネタの書き捨て場（docs/06_全体計画.md 工程1）。 */
   ideas: path.join(ROOT, 'ideas'),
   /** AI 工程の手順書。パイプラインはこれを提示するだけで、実行はエージェント。 */

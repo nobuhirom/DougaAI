@@ -23,9 +23,8 @@ CLI（`infer.py`）を1セリフごとに叩くと、そのたびにモデルを
 本システムの構築時点で約1ヶ月前）。インストール手順は上流の README を正とし、
 ここには本システム側が前提にしていることだけを書く。
 
-1. [Irodori-TTS-Server](https://github.com/Aratako/Irodori-TTS-Server) の README に従って
-   セットアップする。macOS では `IRODORI_MODEL_DEVICE` で MPS を指定する
-2. サーバーを起動する（既定では `http://127.0.0.1:8000`）
+1. 下記「セットアップ（このリポジトリでの手順）」でクローンと依存の導入をする
+2. `./tools/irodori/start.sh` で起動する（`http://127.0.0.1:8088`）
 3. 接続を確認する
 
 ```bash
@@ -42,60 +41,70 @@ npm run douga -- doctor
 
 | 環境変数 | 既定値 | 用途 |
 | --- | --- | --- |
-| `IRODORI_BASE_URL` | `http://127.0.0.1:8000/v1` | API のベース URL |
+| `IRODORI_BASE_URL` | `http://127.0.0.1:8088/v1` | API のベース URL（サーバーの既定ポートは 8088） |
 | `IRODORI_MODEL` | `irodori-tts` | `model` フィールドに渡す値 |
 | `IRODORI_API_KEY` | （未設定） | 設定すると `Authorization: Bearer` を付ける |
 
-### リクエスト
+### リクエスト（サーバー README で確認済み）
 
-`POST {IRODORI_BASE_URL}/audio/speech` に OpenAI TTS 互換の形で送る。
+`POST {IRODORI_BASE_URL}/audio/speech` に送る。
 
 ```json
 {
   "model": "irodori-tts",
   "input": "セリフ本文😊",
-  "voice": "<参照音声の名前 または VoiceDesign のキャプション>",
+  "voice": "kaede",
   "response_format": "wav",
-  "speed": 1.0
+  "speed": 1.0,
+  "irodori": { "seed": 42, "caption": "落ち着いた、少し低めの女性話者" }
 }
 ```
 
-- `voice` は `characters/<id>/character.json` の `voice.referenceAudio` の
-  ファイル名（拡張子なし）を渡す。未設定なら `voice.caption` を渡す
-- `speed` は `voice.speed`
+- `voice` はサーバーが `IRODORI_VOICES_DIR` から解決する ID（`voices/<id>.wav` → `"<id>"`）。
+  参照音声の無い声は `"none"` を送り、`irodori.caption` だけで声質を指定する
+- `irodori.seed` を固定し、同じテキストから同じ音声が出るようにしている（N1）
 - `input` の末尾には `emotion` に対応する絵文字が付く（[04_要件定義.md](04_要件定義.md) 3.4）
 
-**サーバーがこの形を受け付けない場合、こちらで推測して補正しない。**
-サーバーが返したエラーをそのまま投げて止める（実装: `src/pipeline/tts.ts`）。
-黙って別のリクエストを組み立てると、意図しない音声が入った動画が成功扱いで
-出てくることになる。エラーを見て `src/pipeline/tts.ts` の `IrodoriBackend` を
-実際の API に合わせる。
+声の定義は [voices/library.json](../voices/library.json)。キャラクターは `voice.id` で参照する。
+
+### セットアップ（このリポジトリでの手順）
+
+```bash
+cd tools/irodori && git clone https://github.com/Aratako/Irodori-TTS-Server.git server
+cd server && uv sync --extra cpu          # macOS では PyPI の PyTorch（MPS 対応）が入る
+cd ../../.. && ./tools/irodori/start.sh   # tools/irodori/.env を読んで起動
+```
+
+`.env` では `IRODORI_HF_CHECKPOINT=Aratako/Irodori-TTS-v4.1-Small`（推奨・最新）、
+`IRODORI_MODEL_DEVICE=mps`、`IRODORI_VOICES_DIR` をこのリポジトリの `voices/` に向けている。
+初回はモデルを Hugging Face から取得する。
+
+`~/.cache/huggingface/token` が古いと 401 になる（モデルは公開）。`.env` で
+`HF_TOKEN_PATH` を存在しないパスに向け、サーバーにはトークンを読ませない。
 
 ---
 
 ## キャラクターの声を固定する
 
-参照音声によるゼロショットクローンで声を固定する（[04_要件定義.md](04_要件定義.md) Q4-2）。
+声は [voices/library.json](../voices/library.json) に登録し、キャラクターは `voice.id` で参照する
+（[04_要件定義.md](04_要件定義.md) Q4-2）。キャラ声もアナウンサー風のナレーションも同じ仕組み。
 
 ```
-characters/<id>/voice/
-├── reference.wav   # 参照音声
-└── caption.txt     # VoiceDesign 用の声質記述（参照音声がない場合に使う）
+voices/
+├── library.json   # 声の定義（id / label / style / caption / reference / speed / seed）
+└── kaede.wav      # 参照音声（あれば）。ファイル名が voice ID になる
 ```
-
-`character.json` から参照する。
 
 ```json
-{
-  "voice": {
-    "referenceAudio": "voice/reference.wav",
-    "speed": 1.0
-  }
-}
+{ "id": "kaede", "label": "楓（説明役）", "style": "character",
+  "reference": "kaede.wav", "caption": "落ち着いた、少し低めの女性話者", "speed": 1.0, "seed": 42 }
 ```
 
-参照音声のファイルサイズと更新時刻は音声キャッシュのキーに含まれる。
-差し替えると、そのキャラクターのセリフだけが自動で再生成される。
+- 参照音声があればゼロショットクローンで声が固定される。無ければ `caption` だけで指定し、
+  `seed` の固定で回ごとの揺れを抑える
+- 参照音声のファイルサイズと更新時刻は音声キャッシュのキーに含まれる。
+  差し替えると、その声を使うセリフだけが自動で再生成される
+- 同一話者の短くきれいなクリップを複数（合計30秒程度で効果の大半が出る。上限120秒）
 
 ### 参照音声の用意について
 

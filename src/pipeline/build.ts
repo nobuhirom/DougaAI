@@ -33,6 +33,7 @@ import {
   validateDurations,
   validateScript,
 } from './validate.js';
+import { voiceById } from './voices.js';
 
 /**
  * 台本 → マニフェストのビルド。
@@ -164,7 +165,14 @@ export async function build(options: BuildOptions): Promise<BuildResult> {
       ]);
     }
 
-    const request = { text: ttsText(line), character };
+    const voice = voiceById(character.voice.id);
+    if (!voice) {
+      // validateScript が先に落としているので、ここへは来ない
+      throw new ValidationError([
+        { code: 'unknown-voice', lineId: line.id, message: `声が見つからない: ${character.voice.id}（voices/library.json）` },
+      ]);
+    }
+    const request = { text: ttsText(line), character, voice };
     const result = force
       ? await (async () => {
           const dir = DIRS.build;

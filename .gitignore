@@ -24,3 +24,6 @@ renders/
 
 # OS
 .DS_Store
+
+# Irodori-TTS-Server のクローン（外部リポジトリ。手順は docs/05_TTS導入.md）
+tools/irodori/server/

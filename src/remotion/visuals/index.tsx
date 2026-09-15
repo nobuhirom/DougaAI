@@ -1,9 +1,11 @@
+import { createContext, useContext } from 'react';
 import { Img, interpolate, staticFile, useCurrentFrame } from 'remotion';
 import { charWidthEm } from '../../layout/subtitle.js';
 import type { Visual } from '../../schema/script.js';
 import { STATIC } from '../../shared/static.js';
 import { FONT_FAMILY, MONO_FAMILY } from '../Fonts.js';
-import { COLORS, FADE_FRAMES, PANEL } from '../theme.js';
+import { COLORS, FADE_FRAMES, PANEL, PANEL_KAMISHIBAI } from '../theme.js';
+import type { Format } from '../../schema/script.js';
 
 /**
  * ビジュアルの型（docs/04_要件定義.md 3.5）。
@@ -14,8 +16,16 @@ import { COLORS, FADE_FRAMES, PANEL } from '../theme.js';
  * アニメーションはすべてフレーム番号から計算する。CSS アニメーションは使わない（P2）。
  */
 
-const INNER_WIDTH = PANEL.width - PANEL.padding * 2;
-const INNER_HEIGHT = PANEL.height - PANEL.padding * 2;
+/**
+ * パネルの寸法は形式で変わる（掛け合い: 立ち絵の横 / 紙芝居: 幅いっぱい）。
+ * 各ビジュアルは Context から受け取り、決め打ちの定数を持たない。
+ */
+type PanelGeometry = { x: number; y: number; width: number; height: number; radius: number; padding: number };
+const PanelContext = createContext<PanelGeometry>(PANEL);
+const usePanel = () => useContext(PanelContext);
+const panelFor = (format: Format): PanelGeometry => (format === 'kamishibai' ? PANEL_KAMISHIBAI : PANEL);
+const innerWidth = (g: PanelGeometry) => g.width - g.padding * 2;
+const innerHeight = (g: PanelGeometry) => g.height - g.padding * 2;
 
 /** 登場時のフェードと軽い迫り上がり。各ビジュアルの先頭フレームから計算する。 */
 function useEntrance() {
@@ -31,17 +41,18 @@ function useEntrance() {
 
 function Panel({ children }: { children: React.ReactNode }) {
   const { opacity, translateY } = useEntrance();
+  const g = usePanel();
   return (
     <div
       style={{
         position: 'absolute',
-        left: PANEL.x,
-        top: PANEL.y,
-        width: PANEL.width,
-        height: PANEL.height,
-        padding: PANEL.padding,
+        left: g.x,
+        top: g.y,
+        width: g.width,
+        height: g.height,
+        padding: g.padding,
         boxSizing: 'border-box',
-        borderRadius: PANEL.radius,
+        borderRadius: g.radius,
         background: COLORS.panel,
         boxShadow: '0 24px 60px rgba(0, 0, 0, 0.45)',
         fontFamily: FONT_FAMILY,
@@ -59,6 +70,7 @@ function Panel({ children }: { children: React.ReactNode }) {
 // --- title -------------------------------------------------------------------
 
 function TitleVisual({ text, subtitle }: { text: string; subtitle?: string }) {
+  const INNER_HEIGHT = innerHeight(usePanel());
   return (
     <Panel>
       <div
@@ -176,6 +188,9 @@ function CodeVisual({
   const lines = code.replace(/\n+$/, '').split('\n');
   const highlighted = new Set(highlightLines ?? []);
   const gutter = String(lines.length).length;
+  const g = usePanel();
+  const INNER_HEIGHT = innerHeight(g);
+  const INNER_WIDTH = innerWidth(g);
 
   // 高さと幅の両方から字の大きさを決める。
   // 行数だけで決めると、長い行が右端で黙って切れる（overflow: hidden なので
@@ -360,6 +375,7 @@ function ImageVisual({
   caption?: string;
   fit: 'contain' | 'cover';
 }) {
+  const INNER_HEIGHT = innerHeight(usePanel());
   return (
     <Panel>
       <div
@@ -396,9 +412,18 @@ function ImageVisual({
 export interface VisualViewProps {
   visual: Visual;
   projectId: string;
+  format: Format;
 }
 
-export function VisualView({ visual, projectId }: VisualViewProps) {
+export function VisualView({ visual, projectId, format }: VisualViewProps) {
+  return (
+    <PanelContext.Provider value={panelFor(format)}>
+      <VisualBody visual={visual} projectId={projectId} />
+    </PanelContext.Provider>
+  );
+}
+
+function VisualBody({ visual, projectId }: { visual: Visual; projectId: string }) {
   switch (visual.type) {
     case 'none':
       return null;

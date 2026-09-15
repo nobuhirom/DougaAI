@@ -65,15 +65,13 @@ export const characterSchema = z.object({
   appearance: appearanceSchema,
   voice: z.object({
     /**
-     * Irodori TTS の参照音声（characters/<id>/ からの相対パス）。
-     * ゼロショットクローンで声を固定する（docs/04_要件定義.md Q4-2）。
-     * 省略時は参照なし生成になり、声が回ごとに揺れる。
+     * 声のライブラリ（voices/library.json）の id。
+     * 参照音声・キャプション・話速・seed はライブラリ側で持つ。
+     * キャラの声もアナウンサー風のナレーションも同じ仕組みで扱う。
      */
-    referenceAudio: z.string().min(1).optional(),
-    /** VoiceDesign 用の声質記述。referenceAudio が無いときに使う。 */
-    caption: z.string().min(1).optional(),
-    /** 話速。Irodori-TTS-Server の speed に渡す。 */
-    speed: z.number().min(0.25).max(4).default(1),
+    id: z.string().regex(/^[a-z0-9][a-z0-9-]*$/),
+    /** ライブラリの話速をこのキャラだけ上書きしたいとき。 */
+    speed: z.number().min(0.25).max(4).optional(),
     /**
      * `macos-say` バックエンドで使う音声名（`say -v '?'` で一覧が出る）。
      * これは下書き用のバックエンドで、公開する動画の音声ではない。

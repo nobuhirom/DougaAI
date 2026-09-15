@@ -13,12 +13,14 @@ import { COLORS, NAMEPLATE, SUBTITLE } from '../theme.js';
 export interface SubtitleProps {
   lines: string[];
   character: Character;
+  /** 紙芝居ではナレーターの名札を出さない。 */
+  showName?: boolean;
 }
 
-export function Subtitle({ lines, character }: SubtitleProps) {
+export function Subtitle({ lines, character, showName = true }: SubtitleProps) {
   return (
     <>
-      <div
+      {showName ? <div
         style={{
           position: 'absolute',
           left: SUBTITLE.x,
@@ -38,7 +40,7 @@ export function Subtitle({ lines, character }: SubtitleProps) {
         }}
       >
         {character.displayName}
-      </div>
+      </div> : null}
 
       <div
         style={{

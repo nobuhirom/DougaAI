@@ -5,7 +5,9 @@ import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 import type { Character } from '../schema/character.js';
-import { audioCacheDir, characterDir } from './paths.js';
+import type { Voice } from '../schema/voice.js';
+import { audioCacheDir } from './paths.js';
+import { referencePath } from './voices.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -19,14 +21,15 @@ const execFileAsync = promisify(execFile);
  * - `irodori`   公開用。Irodori TTS（docs/03_方式決定.md 決定3）
  * - `macos-say` 下書き用。尺・口パク・字幕・レンダリングの検証に使う
  *
- * 生成はセリフ単位でキャッシュする。台本を1行直したときに全セリフを
- * 作り直さないため（docs/04_要件定義.md 4.2 / N2）。
+ * 声はライブラリ（voices/library.json）で管理し、キャラクターは id で参照する。
+ * 生成はセリフ単位でキャッシュする（docs/04_要件定義.md 4.2 / N2）。
  */
 
 export interface TtsRequest {
   /** TTS に渡す最終テキスト（読みの上書きと感情絵文字が適用済み）。 */
   text: string;
   character: Character;
+  voice: Voice;
 }
 
 export interface TtsBackend {
@@ -38,18 +41,24 @@ export interface TtsBackend {
   synthesize(request: TtsRequest, outFile: string): Promise<void>;
 }
 
+/** キャラ側の上書きがあればそちら、無ければライブラリの話速。 */
+export const effectiveSpeed = (request: TtsRequest): number =>
+  request.character.voice.speed ?? request.voice.speed;
+
 // --- Irodori TTS ------------------------------------------------------------
 
-const DEFAULT_IRODORI_BASE_URL = 'http://127.0.0.1:8000/v1';
+/** Irodori-TTS-Server の既定ポートは 8088（README）。 */
+const DEFAULT_IRODORI_BASE_URL = 'http://127.0.0.1:8088/v1';
 
 /**
  * Irodori-TTS-Server（OpenAI TTS 互換 API）を叩く。
  *
- * https://github.com/Aratako/Irodori-TTS-Server
+ * https://github.com/Aratako/Irodori-TTS-Server の README に従う:
+ * - `voice` はサーバーが IRODORI_VOICES_DIR から解決する ID。参照音声が無い声は "none"
+ * - キャプション（VoiceDesign）と seed は `irodori` オブジェクトで渡す
+ * - `seed` を固定して、同じテキストからは同じ音声が出るようにする（N1）
  *
- * リクエスト形は OpenAI の /v1/audio/speech に準拠する。サーバーが受け付けない
- * フィールドがあった場合、推測で補正せずサーバーが返したエラーをそのまま投げる。
- * 黙って別の音声を作るより、止まって気づける方がよい。
+ * サーバーが受け付けないフィールドがあった場合、推測で補正せずエラーをそのまま投げる。
  */
 export class IrodoriBackend implements TtsBackend {
   readonly id = 'irodori';
@@ -62,18 +71,24 @@ export class IrodoriBackend implements TtsBackend {
   ) {}
 
   get version(): string {
-    return `${this.id}:${this.model}`;
+    return `${this.id}:${this.model}:v2`;
   }
 
   async synthesize(request: TtsRequest, outFile: string): Promise<void> {
-    const { character, text } = request;
+    const { voice, text } = request;
+    const hasReference = referencePath(voice) !== null;
 
-    // 参照音声はサーバー側に登録された voice 名で指定する。
-    // 未設定なら VoiceDesign のキャプションに委ねる。
-    const voice =
-      character.voice.referenceAudio !== undefined
-        ? path.parse(character.voice.referenceAudio).name
-        : (character.voice.caption ?? 'default');
+    const body: Record<string, unknown> = {
+      model: this.model,
+      input: text,
+      voice: hasReference ? voice.id : 'none',
+      response_format: 'wav',
+      speed: effectiveSpeed(request),
+      irodori: {
+        seed: voice.seed,
+        ...(voice.caption ? { caption: voice.caption } : {}),
+      },
+    };
 
     const response = await fetch(`${this.baseUrl}/audio/speech`, {
       method: 'POST',
@@ -81,27 +96,19 @@ export class IrodoriBackend implements TtsBackend {
         'content-type': 'application/json',
         ...(this.apiKey ? { authorization: `Bearer ${this.apiKey}` } : {}),
       },
-      body: JSON.stringify({
-        model: this.model,
-        input: text,
-        voice,
-        response_format: 'wav',
-        speed: character.voice.speed,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const detail = await response.text().catch(() => '');
       throw new Error(
         `Irodori TTS が ${response.status} ${response.statusText} を返した。` +
-          `${this.baseUrl} でサーバーが動いているか確認する。${detail ? `\n${detail}` : ''}`,
+          `${this.baseUrl} でサーバーが動いているか確認する（tools/irodori/start.sh）。${detail ? `\n${detail}` : ''}`,
       );
     }
 
     const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.byteLength === 0) {
-      throw new Error('Irodori TTS が空の音声を返した');
-    }
+    if (buffer.byteLength === 0) throw new Error('Irodori TTS が空の音声を返した');
     await fsp.writeFile(outFile, buffer);
   }
 }
@@ -115,9 +122,7 @@ function stripEmoji(text: string): string {
 
 /**
  * macOS 標準の `say` で合成する。
- *
- * 公開する動画の音声ではない。Irodori TTS を立ち上げる前に、尺の計算・
- * 口パク・字幕・レンダリングまで通して検証するために置いている。
+ * 公開する動画の音声ではない。配管の検証に使う。
  */
 export class MacosSayBackend implements TtsBackend {
   readonly id = 'macos-say';
@@ -131,22 +136,11 @@ export class MacosSayBackend implements TtsBackend {
 
     const aiff = `${outFile}.aiff`;
     // say の -r は words per minute。日本語では文字レートに近い挙動をする。
-    const rate = Math.round(180 * character.voice.speed);
+    const rate = Math.round(180 * effectiveSpeed(request));
     try {
-      await execFileAsync('say', [
-        '-v', character.voice.systemVoice,
-        '-r', String(rate),
-        '-o', aiff,
-        spoken,
-      ]);
+      await execFileAsync('say', ['-v', character.voice.systemVoice, '-r', String(rate), '-o', aiff, spoken]);
       // 出力先は一時ファイル（.tmp）なので、拡張子から形式を推測させない。
-      await execFileAsync('ffmpeg', [
-        '-v', 'error', '-y',
-        '-i', aiff,
-        '-ar', '48000', '-ac', '1',
-        '-f', 'wav',
-        outFile,
-      ]);
+      await execFileAsync('ffmpeg', ['-v', 'error', '-y', '-i', aiff, '-ar', '48000', '-ac', '1', '-f', 'wav', outFile]);
     } finally {
       await fsp.rm(aiff, { force: true });
     }
@@ -172,32 +166,30 @@ export function isBackendId(value: string): value is BackendId {
 // --- キャッシュ --------------------------------------------------------------
 
 /** 参照音声の中身までキーに含める。差し替えたら再生成されるように。 */
-function referenceFingerprint(character: Character): string {
-  const ref = character.voice.referenceAudio;
-  if (!ref) return 'none';
-  const file = path.join(characterDir(character.id), ref);
-  if (!fs.existsSync(file)) return `missing:${ref}`;
+function referenceFingerprint(voice: Voice): string {
+  const file = referencePath(voice);
+  if (!file) return 'none';
+  if (!fs.existsSync(file)) return `missing:${voice.reference}`;
   const stat = fs.statSync(file);
-  return `${ref}:${stat.size}:${stat.mtimeMs}`;
+  return `${voice.reference}:${stat.size}:${stat.mtimeMs}`;
 }
 
 const KEY_SEPARATOR = String.fromCharCode(0);
 
 /**
- * キャッシュキー = sha256(テキスト + キャラ設定 + バックエンドのバージョン)
- *
+ * キャッシュキー = sha256(テキスト + 声の設定 + バックエンドのバージョン)
  * バックエンドを含めるため、下書き音声と公開用音声が混ざることはない。
- * TTS モデルを更新したときも自動で全再生成される（docs/04_要件定義.md 4.2）。
  */
 export function cacheKey(request: TtsRequest, backend: TtsBackend): string {
-  const { character, text } = request;
+  const { character, voice, text } = request;
   const material = [
     backend.version,
-    character.id,
-    String(character.voice.speed),
-    character.voice.caption ?? '',
+    voice.id,
+    String(effectiveSpeed(request)),
+    voice.caption ?? '',
+    String(voice.seed),
     character.voice.systemVoice,
-    referenceFingerprint(character),
+    referenceFingerprint(voice),
     text,
   ].join(KEY_SEPARATOR);
   return crypto.createHash('sha256').update(material).digest('hex').slice(0, 32);
@@ -209,19 +201,13 @@ export interface SynthesizeResult {
 }
 
 /** キャッシュを見て、無ければ合成する。 */
-export async function synthesizeCached(
-  request: TtsRequest,
-  backend: TtsBackend,
-): Promise<SynthesizeResult> {
+export async function synthesizeCached(request: TtsRequest, backend: TtsBackend): Promise<SynthesizeResult> {
   const dir = audioCacheDir();
   await fsp.mkdir(dir, { recursive: true });
 
   const key = cacheKey(request, backend);
   const file = path.join(dir, `${key}.wav`);
-
-  if (fs.existsSync(file) && fs.statSync(file).size > 0) {
-    return { file, cached: true };
-  }
+  if (fs.existsSync(file) && fs.statSync(file).size > 0) return { file, cached: true };
 
   // 途中で落ちた中途半端なファイルを残さないよう、一時ファイル経由で置く。
   const temp = `${file}.tmp`;
@@ -232,6 +218,5 @@ export async function synthesizeCached(
     await fsp.rm(temp, { force: true });
     throw error;
   }
-
   return { file, cached: false };
 }
